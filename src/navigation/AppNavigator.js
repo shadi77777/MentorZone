@@ -1,0 +1,53 @@
+import React from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import SportScreen from '../screens/SportsScreen';
+import TrainerListScreen from '../screens/TrainerListScreen'; // Import TrainerListScreen
+import TrainerProfile from '../screens/TrainerProfile'; // Import TrainerProfile
+import ProfileSetupScreen from '../screens/ProfileSetupScreen'; // Import ProfileSetupScreen
+
+const Stack = createStackNavigator();
+
+const AppNavigator = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="Register" 
+          component={RegisterScreen} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="Sport" 
+          component={SportScreen} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="TrainerList" 
+          component={TrainerListScreen} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="TrainerProfile" 
+          component={TrainerProfile} 
+          options={{ headerShown: false }} // Add TrainerProfile to the navigation
+        />
+                <Stack.Screen 
+          name="ProfileSetup" 
+          component={ProfileSetupScreen} 
+          options={{ headerShown: false }} 
+        />
+        
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+
+export default AppNavigator;
