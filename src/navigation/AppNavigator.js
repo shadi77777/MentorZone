@@ -7,6 +7,7 @@ import SportScreen from '../screens/SportsScreen';
 import TrainerListScreen from '../screens/TrainerListScreen'; // Import TrainerListScreen
 import TrainerProfile from '../screens/TrainerProfile'; // Import TrainerProfile
 import ProfileSetupScreen from '../screens/ProfileSetupScreen'; // Import ProfileSetupScreen
+import AddTrainerScreen from  '../screens/AddTrainerScreen'; 
 
 const Stack = createStackNavigator();
 
@@ -42,6 +43,11 @@ const AppNavigator = () => {
                 <Stack.Screen 
           name="ProfileSetup" 
           component={ProfileSetupScreen} 
+          options={{ headerShown: false }} 
+        />
+          <Stack.Screen 
+          name="AddTrainer" 
+          component={AddTrainerScreen} 
           options={{ headerShown: false }} 
         />
         

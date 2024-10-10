@@ -43,7 +43,7 @@ const TrainerProfile = ({ route, navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#0D47A1', '#E3F2FD']}
+      colors={['#005f99', '#33ccff']} // Updated gradient for a modern look
       style={styles.container}
     >
       <View style={styles.card}>
@@ -83,38 +83,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     marginTop: 10,
   },
   notFoundText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 22,
     textAlign: 'center',
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
     width: '100%',
-    padding: 20,
+    padding: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   image: {
     width: '100%',
     height: 250,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 20,
   },
   infoContainer: {
     paddingHorizontal: 10,
   },
   name: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#0046a3',
     marginBottom: 10,
@@ -133,21 +133,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 10,
+    lineHeight: 22,
   },
   bio: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
     marginBottom: 20,
+    lineHeight: 22,
   },
   contactButton: {
-    backgroundColor: '#0046a3',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: '#0066cc',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
     alignItems: 'center',
     marginTop: 20,
+    alignSelf: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
   },

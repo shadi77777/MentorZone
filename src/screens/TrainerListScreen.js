@@ -1,27 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
-import { collection, query, where, getDocs } from 'firebase/firestore'; // Firestore queries
-import { db } from '../firebase'; // Firestore instance
-import { LinearGradient } from 'expo-linear-gradient'; // For gradient background
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome } from '@expo/vector-icons';
 
 const TrainerListScreen = ({ route, navigation }) => {
   const { sport } = route.params;
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
-    // Fetch trainers from Firestore based on the selected sport
     const fetchTrainers = async () => {
       try {
-        const trainersRef = collection(db, 'trainers'); // Reference to the trainers collection
-        const q = query(trainersRef, where('sport', '==', sport)); // Query trainers by sport
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('isTrainer', '==', true));
         const querySnapshot = await getDocs(q);
 
-        const trainersList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const trainersList = querySnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter(
+            (trainer) =>
+              Array.isArray(trainer.trainerDetails) &&
+              trainer.trainerDetails.some((detail) => detail.sport === sport)
+          );
 
         setTrainers(trainersList);
         setLoading(false);
@@ -34,30 +41,43 @@ const TrainerListScreen = ({ route, navigation }) => {
     fetchTrainers();
   }, [sport]);
 
-  const renderTrainer = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <Text style={styles.trainerName}>{item.name}</Text>
-        <Text style={styles.trainerRating}>⭐ {item.rating}</Text>
-        <Text style={styles.trainerPrice}>Price: {item.price}</Text>
-        <Text style={styles.trainerDescription}>{item.description}</Text>
-
-        {/* Button to view more details or book a session */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
-        >
-          <Text style={styles.buttonText}>View Profile</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+  const filteredTrainers = trainers.filter(trainer =>
+    trainer.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const renderTrainer = ({ item }) => {
+    // Find kun den sportsgren i trainerDetails, der matcher den valgte sport
+    const sportDetails = item.trainerDetails.find((detail) => detail.sport === sport);
+  
+    return (
+      <View style={styles.card}>
+        <Image source={{ uri: item.profilePicture }} style={styles.image} />
+        <View style={styles.cardContent}>
+          <Text style={styles.trainerName}>{item.name}</Text>
+          {sportDetails && (
+            <>
+              <Text style={styles.trainerRating}>⭐ {sportDetails.rating || 'No rating available'}</Text>
+              <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
+              <Text style={styles.trainerExperience}>{sportDetails.experience}</Text>
+            </>
+          )}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
+          >
+            <Text style={styles.buttonText}>View Profile</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+  
+  
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size="large" color="#ffffff" />
         <Text style={styles.loadingText}>Loading trainers...</Text>
       </View>
     );
@@ -65,13 +85,23 @@ const TrainerListScreen = ({ route, navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#0D47A1', '#E3F2FD']}
+      colors={['#005f99', '#33ccff']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
       <Text style={styles.header}>Trainers for {sport}</Text>
-      {trainers.length > 0 ? (
+      <View style={styles.searchContainer}>
+        <FontAwesome name="search" size={20} color="#666" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search trainers..."
+          placeholderTextColor="#666"
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+      </View>
+      {filteredTrainers.length > 0 ? (
         <FlatList
-          data={trainers}
+          data={filteredTrainers}
           renderItem={renderTrainer}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.trainersList}
@@ -79,6 +109,12 @@ const TrainerListScreen = ({ route, navigation }) => {
       ) : (
         <Text style={styles.noTrainersText}>No trainers available for {sport}.</Text>
       )}
+      <TouchableOpacity
+        style={styles.addTrainerButton}
+        onPress={() => navigation.navigate('AddTrainer', { sport })}
+      >
+        <Text style={styles.addTrainerButtonText}>Add Yourself as a Trainer</Text>
+      </TouchableOpacity>
     </LinearGradient>
   );
 };
@@ -89,65 +125,93 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#ffffff',
     textAlign: 'center',
     marginBottom: 20,
     marginTop: 80,
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+  searchContainer: {
     flexDirection: 'row',
-    marginVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 10,
+    borderRadius: 25,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    padding: 10,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    flexDirection: 'row',
+    marginVertical: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    padding: 15,
+    overflow: 'hidden',
   },
   image: {
-    width: 100,
-    height: 100,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    width: 110,
+    height: 150,
+    borderRadius: 20,
   },
   cardContent: {
     flex: 1,
-    paddingLeft: 15,
-    justifyContent: 'center',
+    paddingLeft: 20,
+    justifyContent: 'space-between',
   },
   trainerName: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#0046a3',
   },
-  trainerRating: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 5,
+  trainerSportContainer: {
+    marginTop: 10,
+  },
+  trainerSport: {
+    fontSize: 18,
+    color: '#333',
   },
   trainerPrice: {
     fontSize: 16,
     color: '#0046a3',
     marginTop: 5,
   },
+  trainerExperience: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 5,
+  },
   trainerDescription: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
     marginTop: 5,
   },
   button: {
-    backgroundColor: '#0046a3',
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: '#0066cc',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 15,
+    alignSelf: 'flex-start',
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -156,7 +220,7 @@ const styles = StyleSheet.create({
   },
   noTrainersText: {
     fontSize: 18,
-    color: '#fff',
+    color: '#ffffff',
     textAlign: 'center',
     marginTop: 20,
   },
@@ -166,9 +230,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
-    color: '#fff',
+    fontSize: 18,
+    color: '#ffffff',
     marginTop: 10,
+  },
+  addTrainerButton: {
+    backgroundColor: '#0046a3',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 40,
+    alignSelf: 'center',
+  },
+  addTrainerButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

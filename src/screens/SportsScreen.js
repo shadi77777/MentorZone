@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';  // For gradient background
+import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';  // Firestore instance
+import { db } from '../firebase'; // Firestore instance
+import ProfilePicture from '../components/ProfilePicture'; // Import ProfilePicture component
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons'; // For sports icons
 
 const SportScreen = () => {
   const navigation = useNavigation();
@@ -23,15 +25,9 @@ const SportScreen = () => {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          console.log('User Data:', userData);
           if (userData.profilePicture) {
             setProfilePicture(userData.profilePicture);
-            console.log('Profile picture found:', userData.profilePicture);
-          } else {
-            console.log('No profile picture found, setting default.');
           }
-        } else {
-          console.log('No user document found.');
         }
       }
     };
@@ -41,37 +37,23 @@ const SportScreen = () => {
 
   // Dummy sports list
   const sports = [
-    { name: 'Football' },
-    { name: 'Basketball' },
-    { name: 'Tennis' },
-    { name: 'Running' },
-    { name: 'Swimming' },
-    { name: 'Cycling' },
-    { name: 'Bordtennis' },
-    { name: 'Badminton' },
+    { name: 'Football', icon: 'football-outline' },
+    { name: 'Basketball', icon: 'basketball-outline' },
+    { name: 'Tennis', icon: 'tennisball-outline' },
+    { name: 'Running', icon: 'walk-outline' },
+    { name: 'Swimming', icon: 'water-outline' },
+    { name: 'Cycling', icon: 'bicycle-outline' },
+    { name: 'Bordtennis', icon: 'table-tennis' },
+    { name: 'Badminton', icon: 'badminton' },
   ];
 
   return (
     <LinearGradient
-      colors={['#0D47A1', '#2196F3']}  // Darker blue tones for a modern look
+      colors={['#0061A8', '#00C6FB']} // Gradient for modern blue tones
       style={[styles.container, { minHeight: screenHeight }]}
     >
-      {/* TouchableOpacity wrapping the Profile Picture */}
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('ProfileSetup')}
-        style={styles.profilePictureTouchable}  // Updated styling for interaction
-      >
-        <View style={styles.profilePictureContainer}>
-          <Image 
-            source={
-              profilePicture
-                ? { uri: profilePicture }
-                : require('../assets/defaultProfile.png')
-            }
-            style={styles.profilePicture}
-          />
-        </View>
-      </TouchableOpacity>
+      {/* Use the ProfilePicture component */}
+      <ProfilePicture profilePicture={profilePicture} />
 
       <View style={styles.logoContainer}>
         <Image
@@ -95,6 +77,7 @@ const SportScreen = () => {
             style={styles.sportButton}
             onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
           >
+            <Ionicons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
             <Text style={styles.sportText}>{sport.name}</Text>
           </TouchableOpacity>
         ))}
@@ -109,46 +92,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  profilePictureTouchable: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
-  },
-  profilePictureContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    borderColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profilePicture: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-  },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 20,
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 120,
+    height: 120,
   },
   headerContainer: {
     alignItems: 'center',
     marginBottom: 20,
   },
   header: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFF',
   },
   subHeader: {
-    fontSize: 16,
-    color: '#B3E5FC',
+    fontSize: 18,
+    color: '#D1E8FF',
     textAlign: 'center',
     marginHorizontal: 30,
     marginBottom: 20,
@@ -160,10 +123,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 15,
     marginVertical: 10,
-    borderRadius: 15,
+    borderRadius: 25,
     width: '90%',
     alignItems: 'center',
     alignSelf: 'center',
+    flexDirection: 'row',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
@@ -171,9 +135,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sportText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: '#0046a3',
+    marginLeft: 10,
+  },
+  sportIcon: {
+    marginRight: 10,
   },
 });
 
