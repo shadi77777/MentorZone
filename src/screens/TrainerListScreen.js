@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Dimensions, TextInput } from 'react-native';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, query, where, getDocs } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 
 const TrainerListScreen = ({ route, navigation }) => {
   const { sport } = route.params;
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
+    // Fetch trainers
     const fetchTrainers = async () => {
       try {
         const usersRef = collection(db, 'users');
@@ -41,14 +44,35 @@ const TrainerListScreen = ({ route, navigation }) => {
     fetchTrainers();
   }, [sport]);
 
+  // Fetch user's profile picture
+  useEffect(() => {
+    const fetchUserProfilePicture = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            setProfilePicture(userDocSnap.data().profilePicture || null);
+          }
+        } catch (error) {
+          console.error('Error fetching profile picture: ', error);
+        }
+      }
+    };
+
+    fetchUserProfilePicture();
+  }, []);
+
   const filteredTrainers = trainers.filter(trainer =>
     trainer.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderTrainer = ({ item }) => {
-    // Find kun den sportsgren i trainerDetails, der matcher den valgte sport
     const sportDetails = item.trainerDetails.find((detail) => detail.sport === sport);
-  
+
     return (
       <View style={styles.card}>
         <Image source={{ uri: item.profilePicture }} style={styles.image} />
@@ -71,8 +95,6 @@ const TrainerListScreen = ({ route, navigation }) => {
       </View>
     );
   };
-  
-  
 
   if (loading) {
     return (
@@ -88,7 +110,23 @@ const TrainerListScreen = ({ route, navigation }) => {
       colors={['#005f99', '#33ccff']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
+      {/* Header with back arrow, title, and profile picture */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={28} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>MentorZone</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileSetup')} style={styles.profileButton}>
+          {profilePicture ? (
+            <Image source={{ uri: profilePicture }} style={styles.profileImage} />
+          ) : (
+            <Image source={require('../assets/defaultProfile.png')} style={styles.profileImage} />
+          )}
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.header}>Trainers for {sport}</Text>
+
       <View style={styles.searchContainer}>
         <FontAwesome name="search" size={20} color="#666" />
         <TextInput
@@ -99,6 +137,7 @@ const TrainerListScreen = ({ route, navigation }) => {
           onChangeText={(text) => setSearchQuery(text)}
         />
       </View>
+
       {filteredTrainers.length > 0 ? (
         <FlatList
           data={filteredTrainers}
@@ -109,6 +148,7 @@ const TrainerListScreen = ({ route, navigation }) => {
       ) : (
         <Text style={styles.noTrainersText}>No trainers available for {sport}.</Text>
       )}
+
       <TouchableOpacity
         style={styles.addTrainerButton}
         onPress={() => navigation.navigate('AddTrainer', { sport })}
@@ -122,7 +162,33 @@ const TrainerListScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  backButton: {
+    padding: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    flex: 1,
+  },
+  profileButton: {
+    padding: 5,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   header: {
     fontSize: 30,
@@ -130,7 +196,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     marginBottom: 20,
-    marginTop: 80,
+    marginTop: 10,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -179,12 +245,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0046a3',
   },
-  trainerSportContainer: {
-    marginTop: 10,
-  },
-  trainerSport: {
-    fontSize: 18,
-    color: '#333',
+  trainerRating: {
+    fontSize: 16,
+    color: '#f1c40f',
+    marginTop: 5,
   },
   trainerPrice: {
     fontSize: 16,
@@ -193,11 +257,6 @@ const styles = StyleSheet.create({
   },
   trainerExperience: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
-  trainerDescription: {
-    fontSize: 15,
     color: '#666',
     marginTop: 5,
   },

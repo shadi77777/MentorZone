@@ -6,7 +6,7 @@ import { db, storage } from '../firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const AddTrainerScreen = ({ route, navigation }) => {
   const sport = route?.params?.sport || '';
@@ -37,7 +37,6 @@ const AddTrainerScreen = ({ route, navigation }) => {
             setCity(userData.city || '');
             setProfilePicture(userData.profilePicture || null);
           } else {
-            // Hvis dokumentet ikke findes, opret et nyt
             await setDoc(userDocRef, {
               name: '',
               city: '',
@@ -194,6 +193,37 @@ const AddTrainerScreen = ({ route, navigation }) => {
     }
   };
 
+  const deleteTrainer = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        // Delete profile picture from Firebase Storage if exists
+        if (userDocSnap.exists() && userDocSnap.data().profilePicture) {
+          const profilePicRef = ref(storage, `profilePictures/${user.uid}`);
+          await deleteObject(profilePicRef);
+        }
+
+        // Update Firestore to remove trainer information
+        await updateDoc(userDocRef, {
+          isTrainer: false,
+          trainerDetails: [],
+          profilePicture: '',
+        });
+
+        Alert.alert('Success', 'Your trainer profile has been deleted.');
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error deleting trainer: ', error);
+      Alert.alert('Error deleting trainer', error.message);
+    }
+  };
+
   return (
     <LinearGradient colors={['#005f99', '#33ccff']} style={[styles.container, { minHeight: screenHeight }]}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -252,6 +282,9 @@ const AddTrainerScreen = ({ route, navigation }) => {
         />
         <TouchableOpacity style={styles.button} onPress={addTrainer}>
           <Text style={styles.buttonText}>Add Trainer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteButton} onPress={deleteTrainer}>
+          <Text style={styles.deleteButtonText}>Delete Trainer Profile</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -344,6 +377,24 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: '#cc0000',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  deleteButtonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
