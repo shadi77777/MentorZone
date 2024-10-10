@@ -17,16 +17,16 @@ const SportScreen = () => {
     const fetchUserProfile = async () => {
       const auth = getAuth();
       const user = auth.currentUser;
-  
+
       if (user) {
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          console.log('User Data:', userData);  // Log fetched data
+          console.log('User Data:', userData);
           if (userData.profilePicture) {
             setProfilePicture(userData.profilePicture);
-            console.log('Profile picture found:', userData.profilePicture); // Log profile picture URL
+            console.log('Profile picture found:', userData.profilePicture);
           } else {
             console.log('No profile picture found, setting default.');
           }
@@ -35,10 +35,9 @@ const SportScreen = () => {
         }
       }
     };
-  
+
     fetchUserProfile();
   }, []);
-  
 
   // Dummy sports list
   const sports = [
@@ -54,35 +53,41 @@ const SportScreen = () => {
 
   return (
     <LinearGradient
-      colors={['#0D47A1', '#E3F2FD']}
+      colors={['#0D47A1', '#2196F3']}  // Darker blue tones for a modern look
       style={[styles.container, { minHeight: screenHeight }]}
     >
-
-      {/* Profile Picture in Top-Right */}
-      <View style={styles.profilePictureContainer}>
-        <Image 
-          source={
-            profilePicture
-              ? { uri: profilePicture }  // If a profile picture exists, use it
-              : require('../assets/defaultProfile.png')  // Default image if no profile picture
-          }
-          style={styles.profilePicture}
-        />
-      </View>
+      {/* TouchableOpacity wrapping the Profile Picture */}
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('ProfileSetup')}
+        style={styles.profilePictureTouchable}  // Updated styling for interaction
+      >
+        <View style={styles.profilePictureContainer}>
+          <Image 
+            source={
+              profilePicture
+                ? { uri: profilePicture }
+                : require('../assets/defaultProfile.png')
+            }
+            style={styles.profilePicture}
+          />
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/mentorZone.png')}  // Make sure the path to your logo is correct
+          source={require('../assets/mentorZone.png')}
           style={styles.logo}
           resizeMode="contain"
         />
       </View>
+
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Welcome</Text>
         <Text style={styles.subHeader}>
-          In this app, you can find professional trainers for different sports. Select your sport below to see available trainers!
+          Find professional trainers for different sports. Select a sport below to see available trainers!
         </Text>
       </View>
+
       <ScrollView contentContainerStyle={styles.sportsList}>
         {sports.map((sport, index) => (
           <TouchableOpacity
@@ -104,65 +109,71 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  profilePictureContainer: {
+  profilePictureTouchable: {
     position: 'absolute',
-    top: 40, // Adjust the position from the top of the screen
-    right: 20, // Align it to the right side
-    zIndex: 10, // Ensure the profile picture stays on top
+    top: 40,
+    right: 20,
+    zIndex: 10,
+  },
+  profilePictureContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profilePicture: {
-    width: 50,  // Adjust the size of the profile picture
-    height: 50,
-    borderRadius: 25,  // Make it circular
-    borderWidth: 2,
-    borderColor: '#fff',  // Add a border for a clean look
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 0,  // Adjust for spacing
+    marginBottom: 20,
   },
   logo: {
-    width: 200,  // Adjust the size of the logo
-    height: 200, // Adjust the size of the logo
+    width: 150,
+    height: 150,
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   header: {
-    fontSize: 23,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 0,
+    color: '#FFF',
   },
   subHeader: {
     fontSize: 16,
-    color: '#fff',
-    marginTop: 10,
+    color: '#B3E5FC',
     textAlign: 'center',
-    paddingHorizontal: 20,
-    lineHeight: 22,
+    marginHorizontal: 30,
+    marginBottom: 20,
   },
   sportsList: {
-    alignItems: 'center',
+    paddingBottom: 40,
   },
   sportButton: {
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: '#FFF',
+    padding: 15,
     marginVertical: 10,
-    width: '80%',
-    borderRadius: 12,
+    borderRadius: 15,
+    width: '90%',
     alignItems: 'center',
-    elevation: 4,  // Shadow for Android
-    shadowColor: '#000',  // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
+    elevation: 5,
   },
   sportText: {
-    color: '#0046a3',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
+    color: '#0046a3',
   },
 });
 

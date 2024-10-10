@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ActionSheetIOS, Modal, Button } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -15,9 +15,24 @@ const ProfileSetupScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Function to pick an image
-  const pickImage = async () => {
+  useEffect(() => {
+    // Request permissions for camera and media library
+    (async () => {
+      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+      const mediaLibraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (cameraStatus.status !== 'granted' || mediaLibraryStatus.status !== 'granted') {
+        Alert.alert(
+          'Permissions Required',
+          'Please enable camera and media library permissions in your settings.'
+        );
+      }
+    })();
+  }, []);
+
+  // Function to pick an image from the gallery
+  const pickImageFromGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -28,6 +43,41 @@ const ProfileSetupScreen = ({ navigation }) => {
     if (!result.canceled) {
       setProfilePicture(result.assets[0].uri);
       console.log('Image selected:', result.assets[0].uri);
+    }
+  };
+
+  // Function to take a picture using the camera
+  const takePhoto = async () => {
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
+      console.log('Photo taken:', result.assets[0].uri);
+    }
+  };
+
+  // Function to handle image picker choice
+  const handleImagePicker = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Take Photo', 'Choose from Gallery'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            takePhoto();
+          } else if (buttonIndex === 2) {
+            pickImageFromGallery();
+          }
+        }
+      );
+    } else {
+      setIsModalVisible(true);
     }
   };
 
@@ -78,7 +128,7 @@ const ProfileSetupScreen = ({ navigation }) => {
       Alert.alert('Incomplete fields', 'Please fill in all fields before saving.');
       return;
     }
-
+  
     let profilePicURL = '';
     if (profilePicture) {
       profilePicURL = await uploadImageToFirebase(profilePicture);
@@ -87,14 +137,15 @@ const ProfileSetupScreen = ({ navigation }) => {
         return;
       }
     }
-
+  
     try {
       const profileData = {
         name,
         city,
         profilePicture: profilePicURL || '',
+        isProfileSetup: true,  // Mark profile setup as complete
       };
-
+  
       await setDoc(doc(db, 'users', user.uid), profileData);
       Alert.alert('Profile created successfully!');
       navigation.navigate('Sport');
@@ -103,12 +154,13 @@ const ProfileSetupScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to save profile.');
     }
   };
+  
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Complete Your Profile</Text>
 
-      <TouchableOpacity onPress={pickImage}>
+      <TouchableOpacity onPress={handleImagePicker}>
         <View style={styles.imagePicker}>
           {profilePicture ? (
             <Image source={{ uri: profilePicture }} style={styles.profileImage} />
@@ -125,12 +177,14 @@ const ProfileSetupScreen = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Enter your name"
+        placeholderTextColor="#666666" // Angiv placeholder farven
         value={name}
         onChangeText={setName}
       />
       <TextInput
         style={styles.input}
         placeholder="Enter your city"
+        placeholderTextColor="#666666" // Angiv placeholder farven
         value={city}
         onChangeText={setCity}
       />
@@ -138,6 +192,22 @@ const ProfileSetupScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.saveButton} onPress={handleProfileSave} disabled={uploading}>
         <Text style={styles.saveButtonText}>{uploading ? 'Saving...' : 'Save Profile'}</Text>
       </TouchableOpacity>
+
+      {/* Modal for Android to select between Camera and Gallery */}
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Button title="Take Photo" onPress={() => { setIsModalVisible(false); takePhoto(); }} />
+            <Button title="Choose from Gallery" onPress={() => { setIsModalVisible(false); pickImageFromGallery(); }} />
+            <Button title="Cancel" onPress={() => setIsModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -183,7 +253,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
     width: '80%',
+    color: 'black' // Gør teksten sort
   },
+
+
   saveButton: {
     backgroundColor: '#0046a3',
     padding: 15,
@@ -201,6 +274,17 @@ const styles = StyleSheet.create({
     color: '#0046a3',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
 });
 

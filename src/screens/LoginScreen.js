@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text, Image, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';  
 import { signInWithEmailAndPassword } from 'firebase/auth';  
-import { auth } from '../firebase';  
+import { auth, db } from '../firebase';  // Firestore instance
+import { doc, getDoc } from 'firebase/firestore';  // Firestore methods
 import { LinearGradient } from 'expo-linear-gradient';
 
 const LoginScreen = () => {
@@ -11,24 +12,33 @@ const LoginScreen = () => {
   const screenHeight = Dimensions.get('window').height;
   const navigation = useNavigation();
 
-  // src/screens/LoginScreen.js
-
-// src/screens/LoginScreen.js
-
-const handleLogin = () => {
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
+  const handleLogin = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      Alert.alert('Login Successful', `Welcome, ${user.email}!`);
-      navigation.navigate('ProfileSetup');  // Navigate to ProfileSetup screen after login
-    })
-    .catch((error) => {
+
+      // Check if the user has completed the profile setup
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        // Check if 'isProfileSetup' field is true, otherwise navigate to ProfileSetup
+        if (userData.isProfileSetup) {
+          navigation.navigate('Sport');  // Navigate to SportScreen
+        } else {
+          navigation.navigate('ProfileSetup');  // Navigate to ProfileSetupScreen
+        }
+      } else {
+        // If no document exists for the user, navigate to ProfileSetupScreen
+        navigation.navigate('ProfileSetup');
+      }
+
+    } catch (error) {
       console.error('Login error: ', error);
       Alert.alert('Login Failed', error.message);
-    });
-};
-
-
+    }
+  };
 
   return (
     <LinearGradient
@@ -83,7 +93,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logo: {
-    width: '80%',  // Make the logo slightly smaller for modern design
+    width: '80%',  
     height: '80%',
     marginBottom: 20,
   },
@@ -95,21 +105,21 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 55,
-    borderColor: '#B0BEC5',  // Softer border color
+    borderColor: '#B0BEC5',  
     borderWidth: 1,
-    borderRadius: 12,  // Slightly more rounded for a modern look
+    borderRadius: 12,  
     paddingLeft: 15,
     marginBottom: 20,
-    backgroundColor: '#F5F5F5',  // Softer background color
-    color: '#37474F',  // Softer text color
-    shadowColor: "#000",  // Add a shadow for depth
+    backgroundColor: '#F5F5F5',  
+    color: '#37474F',  
+    shadowColor: "#000",  
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,  // Android shadow effect
+    elevation: 3,  
   },
   button: {
-    backgroundColor: '#1E88E5',  // Light blue to match the gradient
+    backgroundColor: '#1E88E5',  
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
@@ -124,10 +134,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',  // Slightly less bold for modern look
+    fontWeight: '600',  
   },
   registerButton: {
-    backgroundColor: '#42A5F5',  // Different shade of blue for the Register button
+    backgroundColor: '#42A5F5',  
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
@@ -148,7 +158,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     textAlign: 'center',
     color: '#1565C0',
-    fontWeight: '500',  // Slightly more emphasis
+    fontWeight: '500',  
     fontSize: 16,
   },
 });
