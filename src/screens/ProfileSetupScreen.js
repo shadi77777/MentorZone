@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ActionSheetIOS, Modal, Button } from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { db, storage } from '../firebase';
@@ -121,39 +122,52 @@ const ProfileSetupScreen = ({ navigation }) => {
       return null;
     }
   };
+// Save profile details to Firestore
 
-  // Save profile details to Firestore
-  const handleProfileSave = async () => {
-    if (!name || !city) {
-      Alert.alert('Incomplete fields', 'Please fill in all fields before saving.');
+
+const handleProfileSave = async () => {
+  if (!name || !city) {
+    Alert.alert('Incomplete fields', 'Please fill in all fields before saving.');
+    return;
+  }
+
+  let profilePicURL = '';
+  if (profilePicture) {
+    profilePicURL = await uploadImageToFirebase(profilePicture);
+    if (!profilePicURL) {
+      Alert.alert('Error', 'Image upload failed');
       return;
     }
-  
-    let profilePicURL = '';
-    if (profilePicture) {
-      profilePicURL = await uploadImageToFirebase(profilePicture);
-      if (!profilePicURL) {
-        Alert.alert('Error', 'Image upload failed');
-        return;
-      }
+  }
+
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    const profileData = {
+      name,
+      city,
+      profilePicture: profilePicURL || '',
+      isProfileSetup: true, // Mark profile setup as complete
+    };
+
+    if (userDoc.exists()) {
+      // Update the existing document
+      await updateDoc(userDocRef, profileData);
+    } else {
+      // Create a new document if it doesn't exist
+      await setDoc(userDocRef, profileData);
     }
-  
-    try {
-      const profileData = {
-        name,
-        city,
-        profilePicture: profilePicURL || '',
-        isProfileSetup: true,  // Mark profile setup as complete
-      };
-  
-      await setDoc(doc(db, 'users', user.uid), profileData);
-      Alert.alert('Profile created successfully!');
-      navigation.navigate('Sport');
-    } catch (error) {
-      console.error('Error saving profile: ', error.message);
-      Alert.alert('Error', 'Failed to save profile.');
-    }
-  };
+
+    Alert.alert('Profile updated successfully!');
+    navigation.navigate('Sport');
+  } catch (error) {
+    console.error('Error updating profile: ', error.message);
+    Alert.alert('Error', 'Failed to update profile.');
+  }
+};
+
+
   
 
   return (

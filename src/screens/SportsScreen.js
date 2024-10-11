@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Firestore instance
 import ProfilePicture from '../components/ProfilePicture'; // Import ProfilePicture component
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons'; // For sports icons
 
 const SportScreen = () => {
@@ -15,25 +15,27 @@ const SportScreen = () => {
   const [profilePicture, setProfilePicture] = useState(null); // State to store profile picture URL
 
   // Fetch user profile info from Firebase (assuming the profile picture is stored in Firestore)
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
+  const fetchUserProfile = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
 
-      if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          if (userData.profilePicture) {
-            setProfilePicture(userData.profilePicture);
-          }
+    if (user) {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        if (userData.profilePicture) {
+          setProfilePicture(userData.profilePicture);
         }
       }
-    };
+    }
+  };
 
-    fetchUserProfile();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserProfile();
+    }, [])
+  );
 
   // Dummy sports list
   const sports = [

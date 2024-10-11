@@ -73,28 +73,36 @@ const TrainerListScreen = ({ route, navigation }) => {
   const renderTrainer = ({ item }) => {
     const sportDetails = item.trainerDetails.find((detail) => detail.sport === sport);
 
+    // Beregn gennemsnitlig rating, hvis tilgængelig
+    const averageRating = item.ratingCount
+        ? (item.ratingSum / item.ratingCount).toFixed(1)
+        : 'No rating available';
+
     return (
-      <View style={styles.card}>
-        <Image source={{ uri: item.profilePicture }} style={styles.image} />
-        <View style={styles.cardContent}>
-          <Text style={styles.trainerName}>{item.name}</Text>
-          {sportDetails && (
-            <>
-              <Text style={styles.trainerRating}>⭐ {sportDetails.rating || 'No rating available'}</Text>
-              <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
-              <Text style={styles.trainerExperience}>{sportDetails.experience}</Text>
-            </>
-          )}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
-          >
-            <Text style={styles.buttonText}>View Profile</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+            <Image source={{ uri: item.profilePicture }} style={styles.image} />
+            <View style={styles.cardContent}>
+                <Text style={styles.trainerName}>{item.name}</Text>
+                {sportDetails && (
+                    <>
+                        <View style={styles.ratingContainer}>
+                            <Text style={styles.trainerRating}>⭐ {averageRating}</Text>
+                        </View>
+                        <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
+                        <Text style={styles.trainerExperience}>{sportDetails.experience}</Text>
+                    </>
+                )}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
+                >
+                    <Text style={styles.buttonText}>View Profile</Text>
+                </TouchableOpacity>
+            </View>
         </View>
-      </View>
     );
-  };
+};
+
 
   if (loading) {
     return (
