@@ -2,20 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from 'react-native-vector-icons';
+import { createNewChat } from './createNewChat';
 
 const ChatScreen = ({ route, navigation }) => {
-    const { trainerId } = route.params;
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [trainerName, setTrainerName] = useState('');
-    const [userName, setUserName] = useState('');
-    const auth = getAuth();
-    const user = auth.currentUser;
-  
-    useEffect(() => {
+  const { chatId, otherParticipant, trainerId } = route.params;
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [trainerName, setTrainerName] = useState('');
+  const [userName, setUserName] = useState('');
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    if (otherParticipant && otherParticipant.name) {
+      setTrainerName(otherParticipant.name);
+    } else if (trainerId) {
       // Fetch trainer name
       const fetchTrainerName = async () => {
         try {
@@ -27,106 +31,121 @@ const ChatScreen = ({ route, navigation }) => {
           console.error('Error fetching trainer name:', error);
         }
       };
-  
       fetchTrainerName();
-    }, [trainerId]);
-  
-    useEffect(() => {
-      // Fetch user name
-      const fetchUserName = async () => {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserName(userDoc.data().name || 'User');
-          }
-        } catch (error) {
-          console.error('Error fetching user name:', error);
-        }
-      };
-  
-      if (user) {
-        fetchUserName();
-      }
-    }, [user]);
-  
-    useEffect(() => {
-      // Create a consistent chatId for two users
-      const chatId = user.uid < trainerId ? `${user.uid}_${trainerId}` : `${trainerId}_${user.uid}`;
-      const messagesRef = collection(db, 'chats', chatId, 'messages');
-      const q = query(messagesRef, orderBy('createdAt', 'asc'));
-  
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const messagesData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMessages(messagesData);
-      });
-  
-      return unsubscribe;
-    }, [trainerId, user]);
-  
-    const handleSend = async () => {
-      if (newMessage.trim() === '') return;
-  
+    }
+  }, [trainerId, otherParticipant]);
+
+  useEffect(() => {
+    // Fetch user name
+    const fetchUserName = async () => {
       try {
-        // Create a consistent chatId for two users
-        const chatId = user.uid < trainerId ? `${user.uid}_${trainerId}` : `${trainerId}_${user.uid}`;
-        const messagesRef = collection(db, 'chats', chatId, 'messages');
-        await addDoc(messagesRef, {
-          text: newMessage,
-          senderId: user.uid,
-          senderName: userName,
-          createdAt: new Date(),
-        });
-        setNewMessage('');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUserName(userDoc.data().name || 'User');
+        }
       } catch (error) {
-        console.error('Error sending message: ', error);
+        console.error('Error fetching user name:', error);
       }
     };
+
+    if (user) {
+      fetchUserName();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
   
-    const renderItem = ({ item }) => (
-      <View style={[styles.messageContainer, item.senderId === user.uid ? styles.myMessage : styles.otherMessage]}>
-        <Text style={styles.senderName}>{item.senderName}</Text>
-        <Text style={styles.messageText}>{item.text}</Text>
-      </View>
-    );
+    if (!chatId) {
+      console.error('Chat ID is missing');
+      return;
+    }
+
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'asc'));
   
-    return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
-              <FontAwesome name="arrow-left" size={28} color="#ffffff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{trainerName}</Text>
-          </View>
-          <FlatList
-            data={messages}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            style={styles.messagesList}
-          />
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={newMessage}
-              onChangeText={setNewMessage}
-              placeholder="Type a message..."
-              placeholderTextColor="#cccccc"
-              style={styles.input}
-            />
-            <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-              <FontAwesome name="send" size={20} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-      </KeyboardAvoidingView>
-    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(messagesData);
+    });
+  
+    return unsubscribe;
+  }, [chatId, user]);
+
+  const handleSend = async () => {
+    if (newMessage.trim() === '') return;
+  
+    try {
+      const chatRef = doc(db, 'chats', chatId);
+      const chatDoc = await getDoc(chatRef);
+  
+      // Opret chatten, hvis den ikke eksisterer
+      if (!chatDoc.exists()) {
+        await createNewChat(user.uid, trainerId);
+      }
+  
+      // Tilføj beskeden til chatten
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      await addDoc(messagesRef, {
+        text: newMessage,
+        senderId: user.uid,
+        senderName: userName,
+        createdAt: new Date(),
+      });
+  
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message: ', error);
+    }
   };
   
+  const renderItem = ({ item }) => (
+    <View style={[styles.messageContainer, item.senderId === user.uid ? styles.myMessage : styles.otherMessage]}>
+      <Text style={styles.senderName}>{item.senderName}</Text>
+      <Text style={styles.messageText}>{item.text}</Text>
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+            <FontAwesome name="arrow-left" size={28} color="#ffffff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{trainerName}</Text>
+        </View>
+        <FlatList
+          data={messages}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.messagesList}
+        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            value={newMessage}
+            onChangeText={setNewMessage}
+            placeholder="Type a message..."
+            placeholderTextColor="#cccccc"
+            style={styles.input}
+          />
+          <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+            <FontAwesome name="send" size={20} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </KeyboardAvoidingView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

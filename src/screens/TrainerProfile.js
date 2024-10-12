@@ -52,6 +52,16 @@ const TrainerProfile = ({ route, navigation }) => {
     }
   }, [trainerId]);
 
+  const handleContactTrainer = () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const chatId = user.uid < trainerId ? `${user.uid}_${trainerId}` : `${trainerId}_${user.uid}`;
+      navigation.navigate('Chat', { chatId, trainerId });
+    }
+  };
+
   const handleRating = async (rating) => {
     try {
       const auth = getAuth();
@@ -178,7 +188,7 @@ const TrainerProfile = ({ route, navigation }) => {
           )}
 
           {/* Button to contact the trainer */}
-          <TouchableOpacity style={styles.contactButton} onPress={() => navigation.navigate('Chat', { trainerId })}>
+          <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
             <Text style={styles.buttonText}>Contact Trainer</Text>
           </TouchableOpacity>
         </View>

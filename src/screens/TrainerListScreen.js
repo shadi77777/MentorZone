@@ -11,7 +11,6 @@ const TrainerListScreen = ({ route, navigation }) => {
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [profilePicture, setProfilePicture] = useState(null);
   const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
@@ -43,28 +42,6 @@ const TrainerListScreen = ({ route, navigation }) => {
 
     fetchTrainers();
   }, [sport]);
-
-  // Fetch user's profile picture
-  useEffect(() => {
-    const fetchUserProfilePicture = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (user) {
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
-            setProfilePicture(userDocSnap.data().profilePicture || null);
-          }
-        } catch (error) {
-          console.error('Error fetching profile picture: ', error);
-        }
-      }
-    };
-
-    fetchUserProfilePicture();
-  }, []);
 
   const filteredTrainers = trainers.filter(trainer =>
     trainer.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -118,18 +95,14 @@ const TrainerListScreen = ({ route, navigation }) => {
       colors={['#005f99', '#33ccff']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
-      {/* Header with back arrow, title, and profile picture */}
+      {/* Header with back arrow, title, and message icon */}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MentorZone</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileSetup')} style={styles.profileButton}>
-          {profilePicture ? (
-            <Image source={{ uri: profilePicture }} style={styles.profileImage} />
-          ) : (
-            <Image source={require('../assets/defaultProfile.png')} style={styles.profileImage} />
-          )}
+        <TouchableOpacity onPress={() => navigation.navigate('MessagesList')} style={styles.messageButton}>
+          <Ionicons name="chatbubble-outline" size={28} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
@@ -188,15 +161,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
-  profileButton: {
+  messageButton: {
     padding: 5,
-  },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 100,
-    borderWidth: 2,
-    borderColor: '#ffffff',
   },
   header: {
     fontSize: 30,
