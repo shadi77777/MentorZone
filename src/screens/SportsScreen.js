@@ -7,6 +7,8 @@ import { db } from '../firebase'; // Firestore instance
 import ProfilePicture from '../components/ProfilePicture'; // Import ProfilePicture component
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons'; // For sports icons
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 
 const SportScreen = () => {
   const navigation = useNavigation();
@@ -39,15 +41,18 @@ const SportScreen = () => {
 
   // Dummy sports list
   const sports = [
-    { name: 'Football', icon: 'football-outline' },
-    { name: 'Basketball', icon: 'basketball-outline' },
-    { name: 'Tennis', icon: 'tennisball-outline' },
-    { name: 'Running', icon: 'walk-outline' },
-    { name: 'Swimming', icon: 'water-outline' },
-    { name: 'Cycling', icon: 'bicycle-outline' },
-    { name: 'Bordtennis', icon: 'table-tennis' },
-    { name: 'Badminton', icon: 'badminton' },
+    { name: 'Football', icon: 'football-outline', type: 'Ionicons' },
+    { name: 'Basketball', icon: 'basketball-outline', type: 'Ionicons' },
+    { name: 'Tennis', icon: 'tennisball-outline', type: 'Ionicons' },
+    { name: 'Running', icon: 'walk-outline', type: 'Ionicons' },
+    { name: 'Swimming', icon: 'water-outline', type: 'Ionicons' },
+    { name: 'Cycling', icon: 'bicycle-outline', type: 'Ionicons' },
+    { name: 'Bordtennis', icon: 'table-tennis', type: 'MaterialCommunityIcons' },
+    { name: 'Badminton', icon: 'badminton', type: 'MaterialCommunityIcons' },
+    { name: 'Yoga', icon: 'yoga', type: 'MaterialCommunityIcons' }, // Nyt ikon fra MaterialCommunityIcons
   ];
+  
+   
 
   return (
     <LinearGradient
@@ -73,17 +78,22 @@ const SportScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.sportsList}>
-        {sports.map((sport, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.sportButton}
-            onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
-          >
-            <Ionicons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
-            <Text style={styles.sportText}>{sport.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+  {sports.map((sport, index) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.sportButton}
+      onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
+    >
+      {sport.type === 'MaterialCommunityIcons' ? (
+        <MaterialCommunityIcons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
+      ) : (
+        <Ionicons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
+      )}
+      <Text style={styles.sportText}>{sport.name}</Text>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
+
     </LinearGradient>
   );
 };
