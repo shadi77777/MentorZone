@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,52 +17,74 @@ const MessagesListScreen = ({ navigation }) => {
       setLoading(false);
       return;
     }
-  
+
     const fetchConversations = async () => {
       try {
         const conversationsRef = collection(db, 'chats');
         const q = query(conversationsRef, where('participants', 'array-contains', user.uid));
         const querySnapshot = await getDocs(q);
-  
+
         if (!querySnapshot.empty) {
-          const conversationsList = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
+          const conversationsList = await Promise.all(
+            querySnapshot.docs.map(async (doc) => {
+              const conversationData = {
+                id: doc.id,
+                ...doc.data(),
+              };
+
+              // Fetch the last message in the conversation
+              const messagesRef = collection(db, 'chats', doc.id, 'messages');
+              const lastMessageQuery = query(messagesRef, orderBy('createdAt', 'desc'), limit(1));
+              const lastMessageSnapshot = await getDocs(lastMessageQuery);
+
+              if (!lastMessageSnapshot.empty) {
+                const lastMessageData = lastMessageSnapshot.docs[0].data();
+                conversationData.lastMessage = lastMessageData.text;
+                conversationData.lastMessageTime = lastMessageData.createdAt.toDate();
+              } else {
+                conversationData.lastMessage = 'No messages yet';
+                conversationData.lastMessageTime = new Date(0); // Set to epoch time if no message exists
+              }
+
+              return conversationData;
+            })
+          );
+
+          // Sort conversations by the time of the last message, descending (latest message first)
+          conversationsList.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
           setConversations(conversationsList);
         } else {
-          console.warn('No conversations found for the current user.');
+          setConversations([]);
         }
       } catch (error) {
         console.error('Error fetching conversations:', error);
       }
       setLoading(false);
     };
-  
+
     fetchConversations();
   }, [user]);
 
   const renderConversation = ({ item }) => {
     if (!item.participantsInfo || item.participantsInfo.length !== 2) {
-        console.warn('Participants info er manglende eller ufuldstændig:', item.participantsInfo);
-        return null;
-      }
-      
-  
-    const otherParticipant = item.participantsInfo.find(p => p.id !== user.uid);
-    
-    if (!otherParticipant) {
-      console.warn('Ingen anden deltager fundet for samtalen:', item);
+      console.warn('Participants info is missing or incomplete:', item.participantsInfo);
       return null;
     }
-  
+
+    const otherParticipant = item.participantsInfo.find(p => p.id !== user.uid);
+
+    if (!otherParticipant) {
+      console.warn('No other participant found for the conversation:', item);
+      return null;
+    }
+
     return (
       <TouchableOpacity
         style={styles.conversationContainer}
         onPress={() => navigation.navigate('Chat', {
-            chatId: item.id, 
-            otherParticipant: otherParticipant
-          })}          
+          chatId: item.id,
+          otherParticipant: otherParticipant
+        })}
       >
         <Image
           source={otherParticipant.profilePicture ? { uri: otherParticipant.profilePicture } : require('../assets/defaultProfile.png')}
@@ -70,13 +92,11 @@ const MessagesListScreen = ({ navigation }) => {
         />
         <View style={styles.conversationContent}>
           <Text style={styles.participantName}>{otherParticipant.name || 'Unknown User'}</Text>
-          <Text style={styles.lastMessage}>{item.lastMessage || 'No messages yet'}</Text>
+          <Text style={styles.lastMessage}>{item.lastMessage}</Text>
         </View>
       </TouchableOpacity>
     );
   };
-  
-  
 
   return (
     <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
