@@ -66,7 +66,7 @@ const TrainerListScreen = ({ route, navigation }) => {
                             <Text style={styles.trainerRating}>⭐ {averageRating}</Text>
                         </View>
                         <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
-                        <Text style={styles.trainerExperience}>{sportDetails.experience}</Text>
+                        <Text style={styles.trainerExperience}>experience{sportDetails.experience}</Text>
                     </>
                 )}
                 <TouchableOpacity
