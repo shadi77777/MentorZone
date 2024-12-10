@@ -10,6 +10,7 @@ import ProfileSetupScreen from '../screens/ProfileSetupScreen'; // Import Profil
 import AddTrainerScreen from  '../screens/AddTrainerScreen';
 import ChatScreen from '../screens/ChatScreen'; // Import ChatScreen
 import MessagesListScreen from '../screens/MessagesListScreen'; // Import MessagesListScreen
+import chatbot from '../screens/chatbot';
 
 const Stack = createStackNavigator();
 
@@ -61,6 +62,11 @@ const AppNavigator = () => {
           name="MessagesList" 
           component={MessagesListScreen} 
           options={{ headerShown: false }} // Add MessagesListScreen to the navigation
+        />
+          <Stack.Screen 
+          name="chatbot" 
+          component={chatbot} 
+          options={{ headerShown: false }} 
         />
       </Stack.Navigator>
     </NavigationContainer>

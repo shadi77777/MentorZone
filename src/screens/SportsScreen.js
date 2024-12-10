@@ -3,20 +3,17 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Image
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Firestore instance
-import ProfilePicture from '../components/ProfilePicture'; // Import ProfilePicture component
+import { db } from '../firebase';
+import ProfilePicture from '../components/ProfilePicture';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons'; // For sports icons
+import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
 
 const SportScreen = () => {
   const navigation = useNavigation();
   const screenHeight = Dimensions.get('window').height;
+  const [profilePicture, setProfilePicture] = useState(null);
 
-  const [profilePicture, setProfilePicture] = useState(null); // State to store profile picture URL
-
-  // Fetch user profile info from Firebase (assuming the profile picture is stored in Firestore)
   const fetchUserProfile = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -39,7 +36,6 @@ const SportScreen = () => {
     }, [])
   );
 
-  // Dummy sports list
   const sports = [
     { name: 'Football', icon: 'football-outline', type: 'Ionicons' },
     { name: 'Basketball', icon: 'basketball-outline', type: 'Ionicons' },
@@ -49,25 +45,29 @@ const SportScreen = () => {
     { name: 'Cycling', icon: 'bicycle-outline', type: 'Ionicons' },
     { name: 'Bordtennis', icon: 'table-tennis', type: 'MaterialCommunityIcons' },
     { name: 'Badminton', icon: 'badminton', type: 'MaterialCommunityIcons' },
-    { name: 'Yoga', icon: 'yoga', type: 'MaterialCommunityIcons' }, // Nyt ikon fra MaterialCommunityIcons
+    { name: 'Yoga', icon: 'yoga', type: 'MaterialCommunityIcons' },
   ];
-  
-   
 
   return (
     <LinearGradient
-      colors={['#0061A8', '#00C6FB']} // Gradient for modern blue tones
+      colors={['#0061A8', '#00C6FB']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
-      {/* Use the ProfilePicture component */}
-      <ProfilePicture profilePicture={profilePicture} />
+      <View style={styles.topBar}>
+        {/* AI Button (venstre side) */}
+        <TouchableOpacity
+          style={styles.chatSupportButton}
+          onPress={() => navigation.navigate('chatbot')}
+        >
+          <Text style={styles.aiText}>AI-Support</Text>
+        </TouchableOpacity>
+
+        {/* Profile Picture (højre side) */}
+        <ProfilePicture profilePicture={profilePicture} />
+      </View>
 
       <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/mentorZone.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Image source={require('../assets/mentorZone.png')} style={styles.logo} resizeMode="contain" />
       </View>
 
       <View style={styles.headerContainer}>
@@ -78,22 +78,21 @@ const SportScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.sportsList}>
-  {sports.map((sport, index) => (
-    <TouchableOpacity
-      key={index}
-      style={styles.sportButton}
-      onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
-    >
-      {sport.type === 'MaterialCommunityIcons' ? (
-        <MaterialCommunityIcons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
-      ) : (
-        <Ionicons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
-      )}
-      <Text style={styles.sportText}>{sport.name}</Text>
-    </TouchableOpacity>
-  ))}
-</ScrollView>
-
+        {sports.map((sport, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.sportButton}
+            onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
+          >
+            {sport.type === 'MaterialCommunityIcons' ? (
+              <MaterialCommunityIcons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
+            ) : (
+              <Ionicons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
+            )}
+            <Text style={styles.sportText}>{sport.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </LinearGradient>
   );
 };
@@ -104,9 +103,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  logoContainer: {
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // AI til venstre, profilbillede til højre
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 15,
+    marginTop: 20
+
+  },
+  chatSupportButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Skygge for knappen
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  aiText: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#0046a3',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
   },
   logo: {
     width: 120,
@@ -114,7 +142,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   header: {
     fontSize: 32,
@@ -140,6 +168,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     flexDirection: 'row',
+    // Knapskygge
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,

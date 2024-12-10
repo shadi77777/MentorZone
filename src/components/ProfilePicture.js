@@ -26,19 +26,17 @@ const ProfilePicture = ({ profilePicture }) => {
 
 const styles = StyleSheet.create({
   profilePictureTouchable: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
+    // Fjern absolute positioning, lader topBar styre placering
   },
   profilePictureContainer: {
-    width: 60,
+    width: 60,   // Samme som før
     height: 60,
     borderRadius: 30,
     borderWidth: 3,
     borderColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 10
   },
   profilePicture: {
     width: 54,
