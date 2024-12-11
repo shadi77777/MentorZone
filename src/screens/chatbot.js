@@ -25,7 +25,7 @@ export default function ChatbotScreen({ navigation }) {
         },
         {
             role: 'assistant',
-            content: 'Hello! I’m here to assist you with any questions or issues. How can I help you today?',
+            content: 'Hello!',
         },
     ];
 
