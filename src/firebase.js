@@ -10,7 +10,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyANFl4AN5bbyKkvQg3aH10BKMW9vSIJSUo",
     authDomain: "mentorzone-e24d2.firebaseapp.com",
     projectId: "mentorzone-e24d2",
-    storageBucket: "mentorzone-e24d2.appspot.com",  // Sørg for at 'storageBucket' er korrekt
+    storageBucket: "mentorzone-e24d2.appspot.com",  
     messagingSenderId: "409680774156",
     appId: "1:409680774156:web:36b800aafc958f8a451a29"
 };

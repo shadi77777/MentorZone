@@ -1,0 +1,73 @@
+MentorZone App
+
+**MentorZone** is a mobile application aimed at connecting users with professional trainers in various sports. Users can register, set up their profile, browse available trainers for different sports, and contact trainers directly through in-app chat. Trainers can also register themselves as professionals to offer their services.
+
+## Features
+
+- **User Registration & Login:** Users can create an account using their email and password. Existing users can log in to access all features.
+- **Profile Setup:** After logging in, users can complete their profile by providing details such as name, city, and an optional profile picture.
+- **Sport Selection:** Users are presented with a list of sports and can choose one to view trainers offering services in that sport.
+- **Trainer Listings:** For each chosen sport, users can see a list of available trainers. The listing includes trainers' names, photos, prices, experience, and average ratings.
+- **Trainer Profile:** Users can view detailed information about a trainer, including a description, experience, and pricing. They can also rate trainers and view the trainer's overall rating.
+- **Add Yourself as a Trainer:** A registered user can add themselves as a trainer by providing details about their sport, price, and experience.
+- **Chat & Messages:** Users can contact trainers via a built-in chat feature. A messages list allows users to manage and access ongoing conversations.
+- **AI Support:** The app includes an AI chat support feature to assist users with common questions or issues.
+
+## Technologies & Dependencies
+
+- **React Native:** The main framework for building cross-platform mobile applications.
+- **Expo:** Used to streamline the React Native development experience.
+- **Firebase:**
+  - **Authentication:** For user registration and login.
+  - **Firestore:** For storing user profiles, trainer details, and chat messages.
+  - **Storage:** For storing and retrieving profile pictures and other images.
+- **Firebase/JS SDK:** To interact with Firebase services.
+- **Other Libraries:** 
+  - `react-navigation` for navigation between screens.
+  - `react-native-gifted-chat` (if used in chatbot or chat features).
+  - `expo-linear-gradient` for background gradients.
+  - `expo-image-picker` for selecting images from the gallery or camera.
+  
+## Project Structure
+
+- **`src/`**
+  - **`screens/`**: Contains screen components (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, chatbot, ProfileSetupScreen).
+  - **`components/`**: Contains reusable UI components (e.g., ProfilePicture, TrainerCard).
+  - **`navigation/`**: Contains the main app navigation setup (e.g., AppNavigator).
+  - **`firebase.js`**: Firebase configuration and initialization.
+
+## Setup & Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/shadi77777/MentorZone/tree/ai-Michael
+   ```
+   
+2. **Install dependencies:**
+   ```bash
+   cd mentorzone-app
+   npm install
+   ```
+
+3. **Run the app:**
+   ```bash
+   npx expo start
+   ```
+   Use an emulator or a physical device connected via USB (with Expo Go app installed) to view the app.
+
+## Usage
+
+- **Registration & Login:** Launch the app. On the Login screen, you can log in or navigate to the Register screen to create a new account.
+- **Profile Setup:** After logging in the first time, complete your profile by adding your name, city, and optionally a profile picture.
+- **Browsing Trainers:** Select a sport from the Sport screen to see available trainers. You can filter trainers by name using the search bar.
+- **Trainer Profile:** Tap on a trainer to view their details. You can rate the trainer and check their rating.
+- **Contact Trainer:** Use the "Contact Trainer" button on the trainer's profile to start a chat.
+- **Messages:** Access your Messages List from the navigation bar to continue ongoing conversations.
+
+## Contributing
+
+1. Fork the repository.
+2. Create a new feature branch: `git checkout -b feature/new-feature`.
+3. Commit your changes: `git commit -m 'Add new feature'`.
+4. Push the branch: `git push origin feature/new-feature`.
+5. Open a pull request.

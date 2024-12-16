@@ -1,26 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
+  TextInput
+} from 'react-native';
 import { collection, doc, getDoc, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 
+/**
+ * TrainerListScreen viser en liste over trænere, der tilbyder undervisning i en specifik sportsgren.
+ * - Henter trænere fra Firestore, der har isTrainer = true
+ * - Filtrerer trænere baseret på den valgte sportsgren fra route parametrene
+ * - Giver mulighed for at søge efter trænere via navn
+ * - Viser gennemsnitlig rating for trænerne, hvis tilgængelig
+ * - Muliggør navigation til trænernes profil-side
+ * - Tilbyder også en knap, hvor brugeren kan tilføje sig selv som træner for den valgte sport
+ */
 const TrainerListScreen = ({ route, navigation }) => {
+  // Henter "sport" fra navigationens parametre
   const { sport } = route.params;
-  const [trainers, setTrainers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  // State-variabler
+  const [trainers, setTrainers] = useState([]);     // Liste over trænere hentet fra Firestore
+  const [loading, setLoading] = useState(true);     // Indikator for om data stadig hentes
+  const [searchQuery, setSearchQuery] = useState(''); // Indtastet søgetekst
   const screenHeight = Dimensions.get('window').height;
 
+  // useEffect: Henter trænere for den valgte sportsgren, når skærmen mountes
   useEffect(() => {
-    // Fetch trainers
     const fetchTrainers = async () => {
       try {
+        // Reference til 'users'-kollektionen i Firestore
         const usersRef = collection(db, 'users');
+        // Hent kun trænere (isTrainer = true)
         const q = query(usersRef, where('isTrainer', '==', true));
         const querySnapshot = await getDocs(q);
 
+        // Filtrér trænere, så vi kun får dem, der tilbyder den valgte sport
         const trainersList = querySnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -43,44 +68,56 @@ const TrainerListScreen = ({ route, navigation }) => {
     fetchTrainers();
   }, [sport]);
 
+  // Filtrerer trænere baseret på søge-input (brugernavn)
   const filteredTrainers = trainers.filter(trainer =>
     trainer.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /**
+   * renderTrainer: Renderer et kort for hver træner i listen.
+   * Viser profilbillede, navn, rating, pris og erfaring for den valgte sport.
+   */
   const renderTrainer = ({ item }) => {
+    // Find detaljer for den aktuelle sport i trænerens data
     const sportDetails = item.trainerDetails.find((detail) => detail.sport === sport);
 
-    // Beregn gennemsnitlig rating, hvis tilgængelig
+    // Beregn gennemsnitlig rating, hvis ratingCount og ratingSum er tilgængelige
     const averageRating = item.ratingCount
-        ? (item.ratingSum / item.ratingCount).toFixed(1)
-        : 'No rating available';
+      ? (item.ratingSum / item.ratingCount).toFixed(1)
+      : 'No rating available';
 
     return (
-        <View style={styles.card}>
-            <Image source={{ uri: item.profilePicture }} style={styles.image} />
-            <View style={styles.cardContent}>
-                <Text style={styles.trainerName}>{item.name}</Text>
-                {sportDetails && (
-                    <>
-                        <View style={styles.ratingContainer}>
-                            <Text style={styles.trainerRating}>⭐ {averageRating}</Text>
-                        </View>
-                        <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
-                        <Text style={styles.trainerExperience}>experience{sportDetails.experience}</Text>
-                    </>
-                )}
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
-                >
-                    <Text style={styles.buttonText}>View Profile</Text>
-                </TouchableOpacity>
-            </View>
+      <View style={styles.card}>
+        {/* Profilbillede */}
+        <Image source={{ uri: item.profilePicture }} style={styles.image} />
+        <View style={styles.cardContent}>
+          <Text style={styles.trainerName}>{item.name}</Text>
+          {sportDetails && (
+            <>
+              {/* Rating */}
+              <View style={styles.ratingContainer}>
+                <Text style={styles.trainerRating}>⭐ {averageRating}</Text>
+              </View>
+              {/* Pris pr. time */}
+              <Text style={styles.trainerPrice}>Price: {sportDetails.price}</Text>
+              {/* Erfaring */}
+              <Text style={styles.trainerExperience}>Experience: {sportDetails.experience} years</Text>
+            </>
+          )}
+
+          {/* Knap til at se trænerprofil */}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('TrainerProfile', { trainerId: item.id })}
+          >
+            <Text style={styles.buttonText}>View Profile</Text>
+          </TouchableOpacity>
         </View>
+      </View>
     );
-};
+  };
 
-
+  // Hvis data hentes stadig, vis en loading-indikator
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -95,7 +132,7 @@ const TrainerListScreen = ({ route, navigation }) => {
       colors={['#005f99', '#33ccff']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
-      {/* Header with back arrow, title, and message icon */}
+      {/* Header med tilbage-knap, titel og beskedknap */}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color="#ffffff" />
@@ -106,8 +143,10 @@ const TrainerListScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Overskrift for listen af trænere til den valgte sport */}
       <Text style={styles.header}>Trainers for {sport}</Text>
 
+      {/* Søgning efter trænernavn */}
       <View style={styles.searchContainer}>
         <FontAwesome name="search" size={20} color="#666" />
         <TextInput
@@ -119,6 +158,7 @@ const TrainerListScreen = ({ route, navigation }) => {
         />
       </View>
 
+      {/* Vis liste af filtrerede trænere, ellers en besked om ingen trænere */}
       {filteredTrainers.length > 0 ? (
         <FlatList
           data={filteredTrainers}
@@ -130,6 +170,7 @@ const TrainerListScreen = ({ route, navigation }) => {
         <Text style={styles.noTrainersText}>No trainers available for {sport}.</Text>
       )}
 
+      {/* Knap til selv at tilføje sig som træner for denne sport */}
       <TouchableOpacity
         style={styles.addTrainerButton}
         onPress={() => navigation.navigate('AddTrainer', { sport })}
@@ -140,6 +181,7 @@ const TrainerListScreen = ({ route, navigation }) => {
   );
 };
 
+// Styles til layout og udseende
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -179,6 +221,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 25,
     marginBottom: 20,
+    // Skyggeeffekt til søgefeltet
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
@@ -196,6 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     flexDirection: 'row',
     marginVertical: 15,
+    // Skyggeeffekt til kortet
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -219,10 +263,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0046a3',
   },
+  ratingContainer: {
+    marginTop: 5,
+  },
   trainerRating: {
     fontSize: 16,
     color: '#f1c40f',
-    marginTop: 5,
   },
   trainerPrice: {
     fontSize: 16,

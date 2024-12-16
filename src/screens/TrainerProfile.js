@@ -1,24 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  StyleSheet, 
+  ActivityIndicator, 
+  TouchableOpacity, 
+  Modal, 
+  Alert 
+} from 'react-native';
 import { doc, getDoc, updateDoc, arrayUnion, increment } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from 'react-native-vector-icons';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
 
+/**
+ * TrainerProfile-komponenten viser detaljer om en bestemt træner (tilhørende det givne trainerId).
+ * Den giver brugeren mulighed for:
+ * - At se trænerens profil, inklusiv billede, by, sport, pris, erfaring og beskrivelse
+ * - At sende en besked til træneren (oprette eller gå ind i en chat)
+ * - At vurdere (rate) træneren med stjerner (1-5)
+ *
+ * Når komponenten mountes, hentes trænerens data fra Firestore. Hvis brugeren er logget ind,
+ * hentes også brugerens profilbillede til at vise i øverste hjørne.
+ */
 const TrainerProfile = ({ route, navigation }) => {
+  // Henter trainerId fra navigationens parametre
   const { trainerId } = route.params;
-  const [trainer, setTrainer] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
 
+  // State-variabler
+  const [trainer, setTrainer] = useState(null);                // Gemmer trænerdata
+  const [loading, setLoading] = useState(true);                // Indikator for datahentning
+  const [profilePicture, setProfilePicture] = useState(null);  // Brugerens profilbillede
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false); // Viser modal til rating
+
+  // useEffect kører ved komponent-mount:
+  // - Henter nuværende bruger
+  // - Henter brugerens profilbillede
+  // - Henter trænerens data baseret på trainerId
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
 
     if (user) {
-      // Fetching user profile picture for the top-right corner
+      // Hent brugerens profilbillede
       const fetchProfilePicture = async () => {
         try {
           const userDocRef = doc(db, 'users', user.uid);
@@ -33,7 +59,7 @@ const TrainerProfile = ({ route, navigation }) => {
       };
       fetchProfilePicture();
 
-      // Function to fetch trainer details based on the trainerId
+      // Hent trænerdata
       const fetchTrainerDetails = async () => {
         try {
           const trainerDocRef = doc(db, 'users', trainerId);
@@ -52,6 +78,11 @@ const TrainerProfile = ({ route, navigation }) => {
     }
   }, [trainerId]);
 
+  /**
+   * handleContactTrainer:
+   * Navigerer brugeren til chatten med denne træner.
+   * Opretter et chatId baseret på bruger-id og træner-id for at sikre deterministisk chatnavn.
+   */
   const handleContactTrainer = () => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -62,6 +93,13 @@ const TrainerProfile = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * handleRating:
+   * Håndterer brugerens rating af træneren.
+   * - Henter trænerens data igen for at sikre opdaterede værdier
+   * - Opdaterer ratingSum og ratingCount, afhængig af om brugeren har ratet før.
+   * - Gemmer brugerens rating i userRatings på trænerens dokument.
+   */
   const handleRating = async (rating) => {
     try {
       const auth = getAuth();
@@ -70,16 +108,15 @@ const TrainerProfile = ({ route, navigation }) => {
 
       const trainerDocRef = doc(db, 'users', trainerId);
 
-      // Fetch trainer details again to ensure the data is up-to-date
+      // Hent trænerdata for at sikre det er opdateret
       const trainerDocSnap = await getDoc(trainerDocRef);
       if (trainerDocSnap.exists()) {
         const trainerData = trainerDocSnap.data();
-        const userRatings = trainerData.userRatings || {}; // Initialize userRatings if it doesn't exist
-
+        const userRatings = trainerData.userRatings || {}; // Brug eksisterende ratings, eller tomt object
         const previousRating = userRatings[user.uid] ? userRatings[user.uid] : 0;
 
         if (previousRating > 0) {
-          // Update existing rating
+          // Hvis brugeren har ratet før, justér ratingSum ved at fjerne den gamle rating og tilføje den nye
           const updatedRatingSum = trainerData.ratingSum - previousRating + rating;
           await updateDoc(trainerDocRef, {
             ratingSum: updatedRatingSum,
@@ -89,7 +126,7 @@ const TrainerProfile = ({ route, navigation }) => {
             },
           });
         } else {
-          // Add a new rating
+          // Hvis det er første gang brugeren rater, inkrementér ratingSum og ratingCount
           await updateDoc(trainerDocRef, {
             ratingSum: increment(rating),
             ratingCount: increment(1),
@@ -101,28 +138,35 @@ const TrainerProfile = ({ route, navigation }) => {
           });
         }
 
-        // Update local state to reflect the new rating
+        // Opdater local state med den nye rating
         setTrainer((prevTrainer) => ({
           ...prevTrainer,
-          ratingSum: previousRating === 0 ? (prevTrainer.ratingSum || 0) + rating : prevTrainer.ratingSum - previousRating + rating,
-          ratingCount: previousRating === 0 ? (prevTrainer.ratingCount || 0) + 1 : prevTrainer.ratingCount,
+          ratingSum: previousRating === 0 
+            ? (prevTrainer.ratingSum || 0) + rating 
+            : prevTrainer.ratingSum - previousRating + rating,
+          ratingCount: previousRating === 0 
+            ? (prevTrainer.ratingCount || 0) + 1 
+            : prevTrainer.ratingCount,
           userRatings: {
             ...prevTrainer.userRatings,
             [user.uid]: rating,
           },
-          ratedBy: [...(prevTrainer.ratedBy || []), user.uid],
+          ratedBy: previousRating === 0 
+            ? [...(prevTrainer.ratedBy || []), user.uid] 
+            : prevTrainer.ratedBy,
         }));
 
-        // Close the modal only after the update is successful
+        // Luk rating-modalen efter succesfuld opdatering
         setIsRatingModalVisible(false);
       }
     } catch (error) {
       console.error('Error rating trainer: ', error);
       Alert.alert('Error', 'Failed to submit rating. Please try again.');
-      setIsRatingModalVisible(false); // Close the modal even if there is an error
+      setIsRatingModalVisible(false); // Luk modal selv ved fejl
     }
   };
 
+  // Hvis data stadig hentes, vis en loading-indikator
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -132,21 +176,24 @@ const TrainerProfile = ({ route, navigation }) => {
     );
   }
 
+  // Hvis der ikke blev fundet en træner med trainerId
   if (!trainer) {
     return <Text style={styles.notFoundText}>Trainer not found</Text>;
   }
 
-  // Check if trainer has trainerDetails
-  const trainerDetail = trainer.trainerDetails && trainer.trainerDetails.length > 0 ? trainer.trainerDetails[0] : null;
+  // Hent første trænerDetail (antag kun én, eller vælg en vilkårlig)
+  const trainerDetail = trainer.trainerDetails && trainer.trainerDetails.length > 0 
+    ? trainer.trainerDetails[0] 
+    : null;
 
-  // Calculate average rating
+  // Beregn gennemsnitlig rating
   const averageRating = trainer.ratingCount
     ? (trainer.ratingSum / trainer.ratingCount).toFixed(1)
     : 'No rating available';
 
   return (
     <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
-      {/* Header */}
+      {/* Header med tilbage-knap, titel og brugerens profilbillede */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
           <FontAwesome name="arrow-left" size={28} color="#ffffff" />
@@ -162,6 +209,7 @@ const TrainerProfile = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Trænerens info-kort */}
       <View style={styles.card}>
         <Image source={{ uri: trainer.profilePicture }} style={styles.image} />
         <View style={styles.infoContainer}>
@@ -177,7 +225,7 @@ const TrainerProfile = ({ route, navigation }) => {
                 <FontAwesome name="star" size={20} color="#ffd700" style={styles.ratingStar} />
                 <Text style={styles.ratingText}>Average Rating: {averageRating}</Text>
                 
-                {/* Tilføjelse af interaktiv vurderingsstjerne */}
+                {/* Ikon til at tilføje eller ændre brugerens rating af træneren */}
                 <TouchableOpacity onPress={() => setIsRatingModalVisible(true)} style={{ marginLeft: 'auto' }}>
                   <FontAwesome name="star-o" size={20} color="#3399ff" style={styles.rateStar} />
                 </TouchableOpacity>
@@ -187,14 +235,14 @@ const TrainerProfile = ({ route, navigation }) => {
             <Text style={styles.noDetails}>No trainer details available</Text>
           )}
 
-          {/* Button to contact the trainer */}
+          {/* Knap til at kontakte træneren (gå til chat) */}
           <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
             <Text style={styles.buttonText}>Contact Trainer</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Modal for rating */}
+      {/* Modal til at vælge rating (1-5 stjerner) */}
       <Modal
         visible={isRatingModalVisible}
         transparent={true}
@@ -224,6 +272,7 @@ const TrainerProfile = ({ route, navigation }) => {
   );
 };
 
+// Styles til udseende og layout
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -352,7 +401,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   rateStar: {
-    marginLeft: 10, // Lidt plads mellem gennemsnitsrating og vurderingsikonet
+    marginLeft: 10,
   },
   ratingText: {
     fontSize: 16,
@@ -366,6 +415,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     alignSelf: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,

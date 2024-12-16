@@ -4,16 +4,22 @@ import { NavigationContainer } from '@react-navigation/native';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import SportScreen from '../screens/SportsScreen';
-import TrainerListScreen from '../screens/TrainerListScreen'; // Import TrainerListScreen
-import TrainerProfile from '../screens/TrainerProfile'; // Import TrainerProfile
-import ProfileSetupScreen from '../screens/ProfileSetupScreen'; // Import ProfileSetupScreen
-import AddTrainerScreen from  '../screens/AddTrainerScreen';
-import ChatScreen from '../screens/ChatScreen'; // Import ChatScreen
-import MessagesListScreen from '../screens/MessagesListScreen'; // Import MessagesListScreen
-import chatbot from '../screens/chatbot';
+import TrainerListScreen from '../screens/TrainerListScreen';   // Skærm til at vise liste over trænere for en specifik sport
+import TrainerProfile from '../screens/TrainerProfile';         // Skærm til at vise detaljeret profil om en specifik træner
+import ProfileSetupScreen from '../screens/ProfileSetupScreen'; // Skærm hvor brugeren kan oprette/ændre sin profil
+import AddTrainerScreen from '../screens/AddTrainerScreen';     // Skærm hvor brugeren kan tilføje sig selv som træner
+import ChatScreen from '../screens/ChatScreen';                 // Skærm til at vise enkelt chat mellem bruger og træner
+import MessagesListScreen from '../screens/MessagesListScreen'; // Skærm til at vise en liste over brugerens samtaler
+import chatbot from '../screens/chatbot';                       // Skærm til chatbot-support
 
 const Stack = createStackNavigator();
 
+/**
+ * AppNavigator opsætter appens navigationsstruktur:
+ * - InitialRouteName = "Login" betyder at appen starter på Login-skærmen
+ * - Hver Stack.Screen definerer en skærm i stakken
+ * - 'headerShown: false' fjerner den øverste headerbjælke, så styling styres i hver enkelt skærm
+ */
 const AppNavigator = () => {
   return (
     <NavigationContainer>
@@ -41,7 +47,7 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="TrainerProfile" 
           component={TrainerProfile} 
-          options={{ headerShown: false }} // Add TrainerProfile to the navigation
+          options={{ headerShown: false }} 
         />
         <Stack.Screen 
           name="ProfileSetup" 
@@ -54,16 +60,16 @@ const AppNavigator = () => {
           options={{ headerShown: false }} 
         />
         <Stack.Screen 
-          name="Chat" // Sørg for, at navnet er "Chat"
+          name="Chat"
           component={ChatScreen} 
-          options={{ headerShown: false }} // Add ChatScreen to the navigation
+          options={{ headerShown: false }} 
         />
         <Stack.Screen 
           name="MessagesList" 
           component={MessagesListScreen} 
-          options={{ headerShown: false }} // Add MessagesListScreen to the navigation
+          options={{ headerShown: false }} 
         />
-          <Stack.Screen 
+        <Stack.Screen 
           name="chatbot" 
           component={chatbot} 
           options={{ headerShown: false }} 

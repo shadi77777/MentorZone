@@ -9,11 +9,23 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+/**
+ * SportScreen viser en liste over sportsgrene, som brugeren kan vælge.
+ * Ved at vælge en sport kan brugeren se en liste over trænere for den pågældende sport.
+ *
+ * Skærmen viser også:
+ * - Et AI-support ikon (til chatbot)
+ * - Brugerens profilbillede (hvis angivet)
+ * - En velkomstbesked med et slogan
+ * 
+ * Ved mount eller fokus på skærmen hentes brugerens profilbillede fra Firestore.
+ */
 const SportScreen = () => {
   const navigation = useNavigation();
   const screenHeight = Dimensions.get('window').height;
-  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null); // Gemmer URL for brugerens profilbillede
 
+  // Funktion til at hente brugerens profilbillede fra Firestore
   const fetchUserProfile = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -30,12 +42,14 @@ const SportScreen = () => {
     }
   };
 
+  // useFocusEffect kaldes hver gang skærmen bliver fokuseret
   useFocusEffect(
     React.useCallback(() => {
       fetchUserProfile();
     }, [])
   );
 
+  // Liste over sportsgrene med tilhørende ikoner
   const sports = [
     { name: 'Football', icon: 'football-outline', type: 'Ionicons' },
     { name: 'Basketball', icon: 'basketball-outline', type: 'Ionicons' },
@@ -49,12 +63,13 @@ const SportScreen = () => {
   ];
 
   return (
+    // Baggrundsgradient
     <LinearGradient
       colors={['#0061A8', '#00C6FB']}
       style={[styles.container, { minHeight: screenHeight }]}
     >
       <View style={styles.topBar}>
-        {/* AI Button (venstre side) */}
+        {/* Knap til AI-support (chatbot) på venstre side */}
         <TouchableOpacity
           style={styles.chatSupportButton}
           onPress={() => navigation.navigate('chatbot')}
@@ -62,14 +77,16 @@ const SportScreen = () => {
           <Text style={styles.aiText}>AI-Support</Text>
         </TouchableOpacity>
 
-        {/* Profile Picture (højre side) */}
+        {/* Profilbillede på højre side */}
         <ProfilePicture profilePicture={profilePicture} />
       </View>
 
+      {/* Logo i midten */}
       <View style={styles.logoContainer}>
         <Image source={require('../assets/mentorZone.png')} style={styles.logo} resizeMode="contain" />
       </View>
 
+      {/* Velkomsttekst og instruktion */}
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Welcome</Text>
         <Text style={styles.subHeader}>
@@ -77,6 +94,7 @@ const SportScreen = () => {
         </Text>
       </View>
 
+      {/* Liste over sportsgrene der kan vælges */}
       <ScrollView contentContainerStyle={styles.sportsList}>
         {sports.map((sport, index) => (
           <TouchableOpacity
@@ -84,6 +102,7 @@ const SportScreen = () => {
             style={styles.sportButton}
             onPress={() => navigation.navigate('TrainerList', { sport: sport.name })}
           >
+            {/* Vælg ikonbibliotek baseret på 'type' */}
             {sport.type === 'MaterialCommunityIcons' ? (
               <MaterialCommunityIcons name={sport.icon} size={24} color="#0046a3" style={styles.sportIcon} />
             ) : (
@@ -97,6 +116,7 @@ const SportScreen = () => {
   );
 };
 
+// Styles til layout og udseende
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -105,12 +125,11 @@ const styles = StyleSheet.create({
   },
   topBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // AI til venstre, profilbillede til højre
+    justifyContent: 'space-between', // AI til venstre, profil til højre
     alignItems: 'center',
     marginBottom: 20,
     paddingHorizontal: 15,
-    marginTop: 20
-
+    marginTop: 20,
   },
   chatSupportButton: {
     width: 60,
@@ -119,14 +138,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    // Skygge for knappen
+    // Skyggeeffekt
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
   },
-
   aiText: {
     fontSize: 8,
     fontWeight: 'bold',
@@ -168,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     flexDirection: 'row',
-    // Knapskygge
+    // Skyggeeffekt for knappen
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,

@@ -1,25 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ActionSheetIOS, Modal, Button } from 'react-native';
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+  Platform,
+  ActionSheetIOS,
+  Modal,
+  Button
+} from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker'; // Bibliotek til billedevalg og kameraadgang
 import { db, storage } from '../firebase';
 
+/**
+ * ProfileSetupScreen giver brugeren mulighed for at:
+ * - Vælge et profilbillede (enten fra galleri eller tage et foto)
+ * - Indtaste navn og by
+ * - Uploade data og billede til Firestore og Storage
+ * 
+ * Formålet er at hjælpe en ny bruger med at oprette sin profil første gang,
+ * eller opdatere den senere.
+ */
 const ProfileSetupScreen = ({ navigation }) => {
+  // Hent den nuværende autentificerede bruger fra Firebase Authentication
   const auth = getAuth();
   const user = auth.currentUser;
 
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  // State-variabler til at gemme brugerens indtastede data og status
+  const [name, setName] = useState('');                 // Brugernavn
+  const [city, setCity] = useState('');                 // By
+  const [profilePicture, setProfilePicture] = useState(null); // URL til valg af profilbillede
+  const [uploading, setUploading] = useState(false);     // Om et billede uploades lige nu
+  const [progress, setProgress] = useState(0);           // Fremdrift i upload (0-100%)
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal-visning til Android valg
 
+  // useEffect: Anmoder om tilladelse til kamera og mediebibliotek ved første visning
   useEffect(() => {
-    // Request permissions for camera and media library
     (async () => {
       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
       const mediaLibraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,12 +55,14 @@ const ProfileSetupScreen = ({ navigation }) => {
     })();
   }, []);
 
-  // Function to pick an image from the gallery
+  /**
+   * pickImageFromGallery: Åbn telefonens galleri for at vælge et billede
+   */
   const pickImageFromGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Kun billeder
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [1, 1], // Kvadratisk
       quality: 1,
     });
 
@@ -47,11 +72,13 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
   };
 
-  // Function to take a picture using the camera
+  /**
+   * takePhoto: Start kamera for at tage et nyt billede
+   */
   const takePhoto = async () => {
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [1, 1], // Kvadratisk
       quality: 1,
     });
 
@@ -61,7 +88,10 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
   };
 
-  // Function to handle image picker choice
+  /**
+   * handleImagePicker: Præsenterer valgmuligheder for billedvalg.
+   * På iOS bruges ActionSheetIOS, på Android en Modal.
+   */
   const handleImagePicker = () => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -82,7 +112,10 @@ const ProfileSetupScreen = ({ navigation }) => {
     }
   };
 
-  // Function to upload the image to Firebase Storage
+  /**
+   * uploadImageToFirebase: Upload det valgte billede til Firebase Storage
+   * Returnerer en downloadURL ved succes.
+   */
   const uploadImageToFirebase = async (uri) => {
     setUploading(true);
     setProgress(0);
@@ -92,6 +125,7 @@ const ProfileSetupScreen = ({ navigation }) => {
       const response = await fetch(uploadUri);
       const blob = await response.blob();
 
+      // Referencen til hvor billedet gemmes i Storage
       const storageRef = ref(storage, `profilePictures/${user.uid}`);
       const uploadTask = uploadBytesResumable(storageRef, blob);
 
@@ -99,6 +133,7 @@ const ProfileSetupScreen = ({ navigation }) => {
         uploadTask.on(
           'state_changed',
           (snapshot) => {
+            // Beregn upload-fremdrift
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             setProgress(progress);
             console.log(`Upload is ${progress}% done`);
@@ -109,6 +144,7 @@ const ProfileSetupScreen = ({ navigation }) => {
             reject(error);
           },
           async () => {
+            // Når upload er fuldført, hent downloadURL
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             console.log('File available at:', downloadURL);
             setUploading(false);
@@ -122,58 +158,61 @@ const ProfileSetupScreen = ({ navigation }) => {
       return null;
     }
   };
-// Save profile details to Firestore
 
-
-const handleProfileSave = async () => {
-  if (!name || !city) {
-    Alert.alert('Incomplete fields', 'Please fill in all fields before saving.');
-    return;
-  }
-
-  let profilePicURL = '';
-  if (profilePicture) {
-    profilePicURL = await uploadImageToFirebase(profilePicture);
-    if (!profilePicURL) {
-      Alert.alert('Error', 'Image upload failed');
+  /**
+   * handleProfileSave: Gemmer brugerens profil (navn, by, billede) i Firestore.
+   * - Tjekker at felter ikke er tomme
+   * - Oploader evt. billede hvis valgt
+   * - Gemmer data i "users" kollektionen
+   * - Navigerer til 'Sport' efter succes
+   */
+  const handleProfileSave = async () => {
+    if (!name || !city) {
+      Alert.alert('Incomplete fields', 'Please fill in all fields before saving.');
       return;
     }
-  }
 
-  try {
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    const profileData = {
-      name,
-      city,
-      profilePicture: profilePicURL || '',
-      isProfileSetup: true, // Mark profile setup as complete
-    };
-
-    if (userDoc.exists()) {
-      // Update the existing document
-      await updateDoc(userDocRef, profileData);
-    } else {
-      // Create a new document if it doesn't exist
-      await setDoc(userDocRef, profileData);
+    let profilePicURL = '';
+    if (profilePicture) {
+      profilePicURL = await uploadImageToFirebase(profilePicture);
+      if (!profilePicURL) {
+        Alert.alert('Error', 'Image upload failed');
+        return;
+      }
     }
 
-    Alert.alert('Profile updated successfully!');
-    navigation.navigate('Sport');
-  } catch (error) {
-    console.error('Error updating profile: ', error.message);
-    Alert.alert('Error', 'Failed to update profile.');
-  }
-};
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
 
+      const profileData = {
+        name,
+        city,
+        profilePicture: profilePicURL || '',
+        isProfileSetup: true, // Markér at profilen er oprettet
+      };
 
-  
+      if (userDoc.exists()) {
+        // Opdater eksisterende dokument
+        await updateDoc(userDocRef, profileData);
+      } else {
+        // Opret nyt dokument hvis det ikke findes
+        await setDoc(userDocRef, profileData);
+      }
+
+      Alert.alert('Profile updated successfully!');
+      navigation.navigate('Sport');
+    } catch (error) {
+      console.error('Error updating profile: ', error.message);
+      Alert.alert('Error', 'Failed to update profile.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Complete Your Profile</Text>
 
+      {/* Profilbilledevalg */}
       <TouchableOpacity onPress={handleImagePicker}>
         <View style={styles.imagePicker}>
           {profilePicture ? (
@@ -184,30 +223,33 @@ const handleProfileSave = async () => {
         </View>
       </TouchableOpacity>
 
+      {/* Viser upload-fremdriften hvis billede uploades */}
       {uploading && (
         <Text style={styles.uploadProgress}>Upload is {Math.round(progress)}% done</Text>
       )}
 
+      {/* Inputfelter for navn og by */}
       <TextInput
         style={styles.input}
         placeholder="Enter your name"
-        placeholderTextColor="#666666" // Angiv placeholder farven
+        placeholderTextColor="#666666"
         value={name}
         onChangeText={setName}
       />
       <TextInput
         style={styles.input}
         placeholder="Enter your city"
-        placeholderTextColor="#666666" // Angiv placeholder farven
+        placeholderTextColor="#666666"
         value={city}
         onChangeText={setCity}
       />
 
+      {/* Knap til at gemme profiloplysninger */}
       <TouchableOpacity style={styles.saveButton} onPress={handleProfileSave} disabled={uploading}>
         <Text style={styles.saveButtonText}>{uploading ? 'Saving...' : 'Save Profile'}</Text>
       </TouchableOpacity>
 
-      {/* Modal for Android to select between Camera and Gallery */}
+      {/* Modal til Android for valg mellem foto eller galleri */}
       <Modal
         transparent={true}
         visible={isModalVisible}
@@ -226,11 +268,12 @@ const handleProfileSave = async () => {
   );
 };
 
+// Styles til layout og udseende
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center', 
     padding: 20,
     backgroundColor: '#E3F2FD',
   },
@@ -267,10 +310,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
     width: '80%',
-    color: 'black' // Gør teksten sort
+    color: 'black', // Gør teksten sort
   },
-
-
   saveButton: {
     backgroundColor: '#0046a3',
     padding: 15,
@@ -291,7 +332,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end', // Placer modal i bunden af skærmen
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
