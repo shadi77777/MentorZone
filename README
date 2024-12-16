@@ -34,6 +34,7 @@ MentorZone App
   - **`screens/`**: Contains screen components (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, chatbot, ProfileSetupScreen).
   - **`components/`**: Contains reusable UI components (e.g., ProfilePicture, TrainerCard).
   - **`navigation/`**: Contains the main app navigation setup (e.g., AppNavigator).
+  - **`service/`**: Contains the api for chatbot (e.g., AppNavigator).
   - **`firebase.js`**: Firebase configuration and initialization.
 
 ## Setup & Installation
@@ -45,15 +46,14 @@ MentorZone App
    
 2. **Install dependencies:**
    ```bash
-   cd mentorzone-app
+   cd mentorzone
    npm install
    ```
 
 3. **Run the app:**
    ```bash
-   npx expo start
+   npx expo start -tunnel
    ```
-   Use an emulator or a physical device connected via USB (with Expo Go app installed) to view the app.
 
 ## Usage
 
@@ -63,11 +63,3 @@ MentorZone App
 - **Trainer Profile:** Tap on a trainer to view their details. You can rate the trainer and check their rating.
 - **Contact Trainer:** Use the "Contact Trainer" button on the trainer's profile to start a chat.
 - **Messages:** Access your Messages List from the navigation bar to continue ongoing conversations.
-
-## Contributing
-
-1. Fork the repository.
-2. Create a new feature branch: `git checkout -b feature/new-feature`.
-3. Commit your changes: `git commit -m 'Add new feature'`.
-4. Push the branch: `git push origin feature/new-feature`.
-5. Open a pull request.
