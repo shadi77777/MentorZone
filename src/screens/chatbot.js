@@ -1,5 +1,5 @@
 // inspiration taget fra https://github.com/Innovationg-og-ny-teknologi-2021/07_GenAI_Code
-
+// API-Nøglen findes i rapporten
 import React, { useState, useEffect } from 'react';
 import { View, SafeAreaView, Text } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
