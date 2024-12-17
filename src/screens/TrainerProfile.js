@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -14,6 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from 'react-native-vector-icons';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
+import CommentComponent from '../components/CommentComponent';
+import { Modalize } from 'react-native-modalize';
 
 /**
  * TrainerProfile-komponenten viser detaljer om en bestemt træner (tilhørende det givne trainerId).
@@ -34,6 +36,8 @@ const TrainerProfile = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);                // Indikator for datahentning
   const [profilePicture, setProfilePicture] = useState(null);  // Brugerens profilbillede
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false); // Viser modal til rating
+  const modalizeRef = useRef(null);
+
 
   // useEffect kører ved komponent-mount:
   // - Henter nuværende bruger
@@ -166,6 +170,10 @@ const TrainerProfile = ({ route, navigation }) => {
     }
   };
 
+  const openCommentsModal = () => {
+    modalizeRef.current?.open();
+  };
+
   // Hvis data stadig hentes, vis en loading-indikator
   if (loading) {
     return (
@@ -191,85 +199,99 @@ const TrainerProfile = ({ route, navigation }) => {
     ? (trainer.ratingSum / trainer.ratingCount).toFixed(1)
     : 'No rating available';
 
-  return (
-    <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
-      {/* Header med tilbage-knap, titel og brugerens profilbillede */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
-          <FontAwesome name="arrow-left" size={28} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>MentorZone</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileSetup')}>
-          <View style={styles.profilePictureContainer}>
-            <Image
-              source={profilePicture ? { uri: profilePicture } : require('../assets/defaultProfile.png')}
-              style={styles.profilePicture}
-            />
+return (
+  <LinearGradient colors={['#005f99', '#33ccff']} style={styles.container}>
+    {/* Header med tilbage-knap, titel og brugerens profilbillede */}
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backArrow} onPress={() => navigation.goBack()}>
+        <FontAwesome name="arrow-left" size={28} color="#ffffff" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>MentorZone</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('ProfileSetup')}>
+        <View style={styles.profilePictureContainer}>
+          <Image
+            source={profilePicture ? { uri: profilePicture } : require('../assets/defaultProfile.png')}
+            style={styles.profilePicture}
+          />
+        </View>
+      </TouchableOpacity>
+    </View>
+
+    {/* Trænerens info-kort */}
+    <View style={styles.card}>
+      <Image source={{ uri: trainer.profilePicture }} style={styles.image} />
+      <View style={styles.infoContainer}>
+        <Text style={styles.name}>{trainer.name || 'Name not available'}</Text>
+        <Text style={styles.city}>City: {trainer.city || 'City not available'}</Text>
+        {trainerDetail ? (
+          <View style={styles.detailContainer}>
+            <Text style={styles.sport}>Sport: {trainerDetail.sport || 'N/A'}</Text>
+            <Text style={styles.price}>Price: {trainerDetail.price || 'N/A'}</Text>
+            <Text style={styles.experience}>Experience: {trainerDetail.experience || 'N/A'}</Text>
+            <Text style={styles.description}>Description: {trainerDetail.description || 'No description available'}</Text>
+            <View style={styles.ratingContainer}>
+              <FontAwesome name="star" size={20} color="#ffd700" style={styles.ratingStar} />
+              <Text style={styles.ratingText}>Average Rating: {averageRating}</Text>
+              
+              {/* Ikon til at tilføje eller ændre brugerens rating af træneren */}
+              <TouchableOpacity onPress={() => setIsRatingModalVisible(true)} style={{ marginLeft: 'auto' }}>
+                <FontAwesome name="star-o" size={20} color="#3399ff" style={styles.rateStar} />
+              </TouchableOpacity>
+            </View>
           </View>
+        ) : (
+          <Text style={styles.noDetails}>No trainer details available</Text>
+        )}
+
+        {/* Knap til at kontakte træneren (gå til chat) */}
+        <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
+          <Text style={styles.buttonText}>Contact Trainer</Text>
         </TouchableOpacity>
       </View>
+    </View>
 
-      {/* Trænerens info-kort */}
-      <View style={styles.card}>
-        <Image source={{ uri: trainer.profilePicture }} style={styles.image} />
-        <View style={styles.infoContainer}>
-          <Text style={styles.name}>{trainer.name || 'Name not available'}</Text>
-          <Text style={styles.city}>City: {trainer.city || 'City not available'}</Text>
-          {trainerDetail ? (
-            <View style={styles.detailContainer}>
-              <Text style={styles.sport}>Sport: {trainerDetail.sport || 'N/A'}</Text>
-              <Text style={styles.price}>Price: {trainerDetail.price || 'N/A'}</Text>
-              <Text style={styles.experience}>Experience: {trainerDetail.experience || 'N/A'}</Text>
-              <Text style={styles.description}>Description: {trainerDetail.description || 'No description available'}</Text>
-              <View style={styles.ratingContainer}>
-                <FontAwesome name="star" size={20} color="#ffd700" style={styles.ratingStar} />
-                <Text style={styles.ratingText}>Average Rating: {averageRating}</Text>
-                
-                {/* Ikon til at tilføje eller ændre brugerens rating af træneren */}
-                <TouchableOpacity onPress={() => setIsRatingModalVisible(true)} style={{ marginLeft: 'auto' }}>
-                  <FontAwesome name="star-o" size={20} color="#3399ff" style={styles.rateStar} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <Text style={styles.noDetails}>No trainer details available</Text>
-          )}
+    {/* Knap til at åbne kommentarmodal */}
+    <TouchableOpacity onPress={openCommentsModal} style={styles.commentButton}>
+      <FontAwesome name="comments" size={20} color="#3399ff" />
+      <Text style={styles.commentButtonText}>Se alle kommentarer</Text>
+    </TouchableOpacity>
 
-          {/* Knap til at kontakte træneren (gå til chat) */}
-          <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
-            <Text style={styles.buttonText}>Contact Trainer</Text>
+    {/* Modalize-komponent til at vise kommentarer */}
+    <Modalize ref={modalizeRef} modalHeight={500}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Kommentarer</Text>
+        <CommentComponent trainerId={trainerId} comments={trainer.comments || []} />
+      </View>
+    </Modalize>
+
+    {/* Modal til at vælge rating (1-5 stjerner) */}
+    <Modal
+      visible={isRatingModalVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setIsRatingModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Rate the Trainer</Text>
+          <View style={styles.starsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => handleRating(star)}>
+                <FontAwesome name="star" size={32} color="#ffd700" />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setIsRatingModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Modal til at vælge rating (1-5 stjerner) */}
-      <Modal
-        visible={isRatingModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsRatingModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Rate the Trainer</Text>
-            <View style={styles.starsContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => handleRating(star)}>
-                  <FontAwesome name="star" size={32} color="#ffd700" />
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setIsRatingModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </LinearGradient>
-  );
+    </Modal>
+  </LinearGradient>
+);  
 };
 
 // Styles til udseende og layout
@@ -450,6 +472,38 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#007AFF',
     fontSize: 18,
+  },
+  // Nye styles til kommentarer og Modalize
+  commentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  commentButtonText: {
+    marginLeft: 5,
+    color: '#3399ff',
+    fontSize: 16,
+  },
+  modalContentComments: {
+    padding: 20,
+  },
+  commentItem: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+  },
+  commentUser: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  commentText: {
+    fontSize: 14,
+  },
+  commentTime: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
 });
 

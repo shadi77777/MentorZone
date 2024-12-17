@@ -1,71 +1,95 @@
-MentorZone App
+# MentorZone App
 
-**MentorZone** is a mobile application aimed at connecting users with professional trainers in various sports. Users can register, set up their profile, browse available trainers for different sports, and contact trainers directly through in-app chat. Trainers can also register themselves as professionals to offer their services.
+**MentorZone** er en mobilapplikation designet til at forbinde brugere med professionelle trænere inden for forskellige sportsgrene. Brugere kan registrere sig, oprette deres profil, gennemse trænere for forskellige sportsgrene og kontakte trænere direkte via indbygget chat. Trænere kan også registrere sig som professionelle for at tilbyde deres tjenester.
 
-## Features
+## Funktioner
 
-- **User Registration & Login:** Users can create an account using their email and password. Existing users can log in to access all features.
-- **Profile Setup:** After logging in, users can complete their profile by providing details such as name, city, and an optional profile picture.
-- **Sport Selection:** Users are presented with a list of sports and can choose one to view trainers offering services in that sport.
-- **Trainer Listings:** For each chosen sport, users can see a list of available trainers. The listing includes trainers' names, photos, prices, experience, and average ratings.
-- **Trainer Profile:** Users can view detailed information about a trainer, including a description, experience, and pricing. They can also rate trainers and view the trainer's overall rating.
-- **Add Yourself as a Trainer:** A registered user can add themselves as a trainer by providing details about their sport, price, and experience.
-- **Chat & Messages:** Users can contact trainers via a built-in chat feature. A messages list allows users to manage and access ongoing conversations.
-- **AI Support:** The app includes an AI chat support feature to assist users with common questions or issues.
+- **Brugerregistrering & Login:** Brugere kan oprette en konto med deres e-mail og adgangskode. Eksisterende brugere kan logge ind for at få adgang til alle funktioner.
+- **Profilopsætning:** Efter login kan brugere udfylde deres profil med navn, by og et valgfrit profilbillede.
+- **Sportsvalg:** Brugere præsenteres for en liste over sportsgrene og kan vælge en for at se trænere, der tilbyder tjenester inden for den sport.
+- **Træneroversigt:** For hver valgt sport kan brugere se en liste over tilgængelige trænere. Oversigten inkluderer:
+  - Trænerens navn
+  - Foto
+  - Pris
+  - Erfaring
+  - Gennemsnitlig vurdering
+- **Trænerprofil:** Brugere kan se detaljerede oplysninger om en træner, inklusiv:
+  - Beskrivelse
+  - Erfaring
+  - Pris
+  - **Vurder Træner:** Brugere kan give træneren en vurdering (1-5 stjerner), og den gennemsnitlige vurdering vises.
+  - **Tilføj Kommentar:** Brugere kan efterlade kommentarer på trænerens profil. Kommentarfunktionen inkluderer:
+    - Brugernavn i stedet for bruger-ID.
+    - Tidsstempler, så man kan se, hvornår kommentaren blev skrevet.
+    - Mulighed for at scrolle gennem alle kommentarer i en overskuelig liste.
+    - En intuitiv knap til at tilføje nye kommentarer med en brugervenlig formular.
+- **Tilføj Dig Selv som Træner:** En registreret bruger kan tilføje sig selv som træner ved at angive detaljer om deres sport, pris og erfaring.
+- **Chat & Beskeder:** Brugere kan kontakte trænere via en indbygget chatfunktion. En beskedliste gør det nemt at administrere og få adgang til igangværende samtaler.
+- **AI Support:** Appen inkluderer en AI-chat-supportfunktion til at hjælpe brugere med almindelige spørgsmål eller problemer.
 
-## Technologies & Dependencies
+---
 
-- **React Native:** The main framework for building cross-platform mobile applications.
-- **Expo:** Used to streamline the React Native development experience.
+## Teknologier & Afhængigheder
+
+- **React Native:** Hovedframeworket til at bygge tværplatforms-mobilapplikationer.
+- **Expo:** Bruges til at strømline udviklingen af React Native-apps.
 - **Firebase:**
-  - **Authentication:** For user registration and login.
-  - **Firestore:** For storing user profiles, trainer details, and chat messages.
-  - **Storage:** For storing and retrieving profile pictures and other images.
-- **Firebase/JS SDK:** To interact with Firebase services.
-- **Other Libraries:** 
-  - `react-navigation` for navigation between screens.
-  - `react-native-gifted-chat` (if used in chatbot or chat features).
-  - `expo-linear-gradient` for background gradients.
-  - `expo-image-picker` for selecting images from the gallery or camera.
-  
-## Project Structure
+  - **Authentication:** Til brugerregistrering og login.
+  - **Firestore:** Til lagring af brugerprofiler, trænerdetaljer, kommentarer og chatbeskeder.
+  - **Storage:** Til lagring og hentning af profilbilleder og andre billeder.
+- **Firebase/JS SDK:** Til at interagere med Firebase-tjenester.
+- **Andre biblioteker:** 
+  - `react-navigation` til navigation mellem skærme.
+  - `react-native-modalize` til moderne modals (bruges til at vise kommentarer).
+  - `expo-linear-gradient` til baggrundsfarve-effekter.
+  - `expo-image-picker` til valg af billeder fra galleri eller kamera.
+
+---
+
+## Projektstruktur
 
 - **`src/`**
-  - **`screens/`**: Contains screen components (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, chatbot, ProfileSetupScreen).
-  - **`components/`**: Contains reusable UI components (e.g., ProfilePicture, TrainerCard).
-  - **`navigation/`**: Contains the main app navigation setup (e.g., AppNavigator).
-  - **`service/`**: Contains the api for chatbot (e.g., AppNavigator).
-  - **`firebase.js`**: Firebase configuration and initialization.
+  - **`screens/`**: Indeholder skærmkomponenter (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, Chatbot, ProfileSetupScreen).
+  - **`components/`**: Indeholder genanvendelige UI-komponenter (f.eks. `ProfilePicture`, `TrainerCard`, `CommentComponent`).
+  - **`navigation/`**: Indeholder appens navigationsopsætning.
+  - **`services/`**: Indeholder API-integration for AI-support og andre nyttige funktioner.
+  - **`firebase.js`**: Firebase-konfiguration og initialisering.
 
-## Setup & Installation
+---
 
-1. **Clone the repository:**
+## Opsætning & Installation
+
+1. **Klon repository:**
    ```bash
    git clone https://github.com/shadi77777/MentorZone/tree/ai-Michael
    ```
-   
-2. **Install dependencies:**
+
+2. **Installer afhængigheder:**
    ```bash
    cd mentorzone
    npm install
    ```
-3. Add API Key for AI Bot
-Add API Key for AI Bot: The AI chat support feature requires an API key to function. Update the required configuration file (e.g., src/services/request.js) and insert your API key in the appropriate variable.
-Example:
-javascript
-const API_KEY = "your-api-key-here";
-Without the API key, the AI bot will not work.
 
-3. **Run the app:**
+3. **Tilføj API-nøgle til AI-botten:**
+   Opdater `src/services/request.js` og indsæt din API-nøgle:
+   ```javascript
+   const API_KEY = "din-api-nøgle-her";
+   ```
+
+4. **Kør appen:**
    ```bash
    npx expo start -tunnel
    ```
 
-## Usage
+---
 
-- **Registration & Login:** Launch the app. On the Login screen, you can log in or navigate to the Register screen to create a new account.
-- **Profile Setup:** After logging in the first time, complete your profile by adding your name, city, and optionally a profile picture.
-- **Browsing Trainers:** Select a sport from the Sport screen to see available trainers. You can filter trainers by name using the search bar.
-- **Trainer Profile:** Tap on a trainer to view their details. You can rate the trainer and check their rating.
-- **Contact Trainer:** Use the "Contact Trainer" button on the trainer's profile to start a chat.
-- **Messages:** Access your Messages List from the navigation bar to continue ongoing conversations.
+## Brugervejledning
+
+1. **Opret en konto eller log ind.**
+2. **Udfyld din profil:** Tilføj navn, by og et profilbillede.
+3. **Find en træner:** Vælg din ønskede sport og gennemse tilgængelige trænere.
+4. **Vurdér og kommentér:** Besøg en træners profil for at give en vurdering eller tilføje en kommentar.
+5. **Start en samtale:** Kontakt træneren direkte via chat.
+6. **Se kommentarer:** Klik på "Se alle kommentarer" for at læse feedback fra andre brugere.
+
+---
