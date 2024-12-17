@@ -72,6 +72,7 @@
 
 3. **Tilføj API-nøgle til AI-botten:**
    Opdater `src/services/request.js` og indsæt din API-nøgle:
+  API-Nøglen findes i rapporten.
    ```javascript
    const API_KEY = "din-api-nøgle-her";
    ```
