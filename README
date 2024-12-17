@@ -49,6 +49,12 @@ MentorZone App
    cd mentorzone
    npm install
    ```
+3. Add API Key for AI Bot
+Add API Key for AI Bot: The AI chat support feature requires an API key to function. Update the required configuration file (e.g., src/services/request.js) and insert your API key in the appropriate variable.
+Example:
+javascript
+const API_KEY = "your-api-key-here";
+Without the API key, the AI bot will not work.
 
 3. **Run the app:**
    ```bash

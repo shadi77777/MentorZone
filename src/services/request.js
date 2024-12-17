@@ -1,5 +1,7 @@
 // services/Request.js
 // Inspiration er taget fra https://github.com/Innovationg-og-ny-teknologi-2021/07_GenAI_Code
+// VIGTIGT: Indsæt din API-nøgle nedenfor for at aktivere AI-bottens funktionalitet.
+// Uden API-nøglen vil AI-chat-supporten ikke fungere.
 import OpenAI from "openai/index.mjs";
 
 // Erstat "YOUR_API_KEY" med din OpenAI API-nøgle
