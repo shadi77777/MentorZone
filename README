@@ -2,6 +2,17 @@
 
 **MentorZone** er en mobilapplikation designet til at forbinde brugere med professionelle trænere inden for forskellige sportsgrene. Brugere kan registrere sig, oprette deres profil, gennemse trænere for forskellige sportsgrene og kontakte trænere direkte via indbygget chat. Trænere kan også registrere sig som professionelle for at tilbyde deres tjenester.
 
+
+**Tilføj API-nøgle til AI-botten:**
+   API Key ligger i rapporten.
+   Opdater `src/services/request.js` og indsæt din API-nøgle i linje 9:
+   ```javascript
+   const API_KEY = "din-api-nøgle-her";
+   ```
+
+**YouTube video:**
+  Youtube link: https://www.youtube.com/shorts/1YZyNVTBZi8 
+
 ---
 
 ## Funktioner
