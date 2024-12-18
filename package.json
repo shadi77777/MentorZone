@@ -13,6 +13,7 @@
     "expo-linear-gradient": "~14.0.1",
     "firebase": "^10.13.2",
     "openai": "^4.76.0",
+    "react-native-calendars": "^1.1307.0",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-gifted-chat": "^2.6.4",
     "react-native-linear-gradient": "^2.8.3",

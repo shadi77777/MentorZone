@@ -2,17 +2,23 @@
 
 **MentorZone** er en mobilapplikation designet til at forbinde brugere med professionelle trænere inden for forskellige sportsgrene. Brugere kan registrere sig, oprette deres profil, gennemse trænere for forskellige sportsgrene og kontakte trænere direkte via indbygget chat. Trænere kan også registrere sig som professionelle for at tilbyde deres tjenester.
 
+---
+
 ## Funktioner
 
 - **Brugerregistrering & Login:** Brugere kan oprette en konto med deres e-mail og adgangskode. Eksisterende brugere kan logge ind for at få adgang til alle funktioner.
+
 - **Profilopsætning:** Efter login kan brugere udfylde deres profil med navn, by og et valgfrit profilbillede.
+
 - **Sportsvalg:** Brugere præsenteres for en liste over sportsgrene og kan vælge en for at se trænere, der tilbyder tjenester inden for den sport.
+
 - **Træneroversigt:** For hver valgt sport kan brugere se en liste over tilgængelige trænere. Oversigten inkluderer:
   - Trænerens navn
   - Foto
   - Pris
   - Erfaring
   - Gennemsnitlig vurdering
+
 - **Trænerprofil:** Brugere kan se detaljerede oplysninger om en træner, inklusiv:
   - Beskrivelse
   - Erfaring
@@ -23,8 +29,17 @@
     - Tidsstempler, så man kan se, hvornår kommentaren blev skrevet.
     - Mulighed for at scrolle gennem alle kommentarer i en overskuelig liste.
     - En intuitiv knap til at tilføje nye kommentarer med en brugervenlig formular.
+
+- **Bookingfunktion:** Brugere kan nemt **booke en tid** med en træner via en moderne kalender:
+  - **Vælg dato:** Brugere kan vælge en tilgængelig dato fra en kalender.
+  - **Vælg tid:** Tilgængelige tidsintervaller præsenteres i en overskuelig liste.
+  - **Fjern bookede tider:** Når en tid er booket, forsvinder den automatisk fra listen for alle andre brugere.
+  - **Bekræft booking:** Brugere får en bekræftelse, når de har booket en tid.
+
 - **Tilføj Dig Selv som Træner:** En registreret bruger kan tilføje sig selv som træner ved at angive detaljer om deres sport, pris og erfaring.
+
 - **Chat & Beskeder:** Brugere kan kontakte trænere via en indbygget chatfunktion. En beskedliste gør det nemt at administrere og få adgang til igangværende samtaler.
+
 - **AI Support:** Appen inkluderer en AI-chat-supportfunktion til at hjælpe brugere med almindelige spørgsmål eller problemer.
 
 ---
@@ -35,12 +50,13 @@
 - **Expo:** Bruges til at strømline udviklingen af React Native-apps.
 - **Firebase:**
   - **Authentication:** Til brugerregistrering og login.
-  - **Firestore:** Til lagring af brugerprofiler, trænerdetaljer, kommentarer og chatbeskeder.
+  - **Firestore:** Til lagring af brugerprofiler, trænerdetaljer, kommentarer, bookinger og chatbeskeder.
   - **Storage:** Til lagring og hentning af profilbilleder og andre billeder.
 - **Firebase/JS SDK:** Til at interagere med Firebase-tjenester.
 - **Andre biblioteker:** 
   - `react-navigation` til navigation mellem skærme.
-  - `react-native-modalize` til moderne modals (bruges til at vise kommentarer).
+  - `react-native-modalize` til moderne modals (bruges til at vise kommentarer og booking).
+  - `react-native-calendars` til kalenderfunktionalitet.
   - `expo-linear-gradient` til baggrundsfarve-effekter.
   - `expo-image-picker` til valg af billeder fra galleri eller kamera.
 
@@ -49,7 +65,7 @@
 ## Projektstruktur
 
 - **`src/`**
-  - **`screens/`**: Indeholder skærmkomponenter (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, Chatbot, ProfileSetupScreen).
+  - **`screens/`**: Indeholder skærmkomponenter (LoginScreen, RegisterScreen, SportScreen, TrainerListScreen, TrainerProfile, AddTrainerScreen, MessagesListScreen, ChatScreen, BookingScreen, Chatbot, ProfileSetupScreen).
   - **`components/`**: Indeholder genanvendelige UI-komponenter (f.eks. `ProfilePicture`, `TrainerCard`, `CommentComponent`).
   - **`navigation/`**: Indeholder appens navigationsopsætning.
   - **`services/`**: Indeholder API-integration for AI-support og andre nyttige funktioner.
@@ -72,7 +88,6 @@
 
 3. **Tilføj API-nøgle til AI-botten:**
    Opdater `src/services/request.js` og indsæt din API-nøgle:
-  API-Nøglen findes i rapporten.
    ```javascript
    const API_KEY = "din-api-nøgle-her";
    ```
@@ -91,6 +106,11 @@
 3. **Find en træner:** Vælg din ønskede sport og gennemse tilgængelige trænere.
 4. **Vurdér og kommentér:** Besøg en træners profil for at give en vurdering eller tilføje en kommentar.
 5. **Start en samtale:** Kontakt træneren direkte via chat.
-6. **Se kommentarer:** Klik på "Se alle kommentarer" for at læse feedback fra andre brugere.
+6. **Book en tid:** 
+   - Klik på "Book Time" på trænerens profil.
+   - Vælg en dato fra kalenderen.
+   - Vælg en tilgængelig tid fra listen.
+   - Bekræft din booking. Bookede tider forsvinder automatisk for andre brugere.
+7. **Se kommentarer:** Klik på "Se alle kommentarer" for at læse feedback fra andre brugere.
 
----
+--- 
