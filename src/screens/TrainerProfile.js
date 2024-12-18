@@ -97,6 +97,11 @@ const TrainerProfile = ({ route, navigation }) => {
     }
   };
 
+  const handleBookTrainer = () => {
+    navigation.navigate('Booking', { trainerId }); // Sender trainerId som parameter
+  };
+  
+
   /**
    * handleRating:
    * Håndterer brugerens rating af træneren.
@@ -244,9 +249,18 @@ return (
         )}
 
         {/* Knap til at kontakte træneren (gå til chat) */}
-        <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
-          <Text style={styles.buttonText}>Contact Trainer</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+  {/* Contact Trainer Button */}
+           <TouchableOpacity style={styles.contactButton} onPress={handleContactTrainer}>
+             <Text style={styles.buttonText}>Contact Trainer</Text>
+            </TouchableOpacity>
+
+  {/* Book Tid Button */}
+          <TouchableOpacity style={styles.bookButton} onPress={handleBookTrainer}>
+             <Text style={styles.buttonText}>Book Tid</Text>
+          </TouchableOpacity>
+      </View>
+
       </View>
     </View>
 
@@ -299,7 +313,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingTop: 70,
+    paddingTop: 40,
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
@@ -309,7 +323,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     position: 'absolute',
-    top: 20,
+    top: 40,
     left: 20,
     right: 20,
     zIndex: 10,
@@ -429,20 +443,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+
+  // Flexbox container til at placere knapper vandret
+  buttonContainer: {
+    flexDirection: 'row', // Placerer knapperne vandret
+    justifyContent: 'space-between', // Fordeler pladsen
+    marginTop: 20,
+  },
   contactButton: {
     backgroundColor: '#0066cc',
     paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginRight: 10, // Afstand mellem knapper
+    alignItems: 'center',
+    flex: 1, // Gør knappen fleksibel i størrelse
+  },
+  bookButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     borderRadius: 25,
     alignItems: 'center',
-    marginTop: 10,
-    alignSelf: 'center',
+    flex: 1, // Gør knappen fleksibel i størrelse
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -473,7 +503,7 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 18,
   },
-  // Nye styles til kommentarer og Modalize
+
   commentButton: {
     flexDirection: 'row',
     alignItems: 'center',

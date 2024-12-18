@@ -11,6 +11,7 @@ import AddTrainerScreen from '../screens/AddTrainerScreen';     // Skærm hvor b
 import ChatScreen from '../screens/ChatScreen';                 // Skærm til at vise enkelt chat mellem bruger og træner
 import MessagesListScreen from '../screens/MessagesListScreen'; // Skærm til at vise en liste over brugerens samtaler
 import chatbot from '../screens/chatbot';                       // Skærm til chatbot-support
+import BookingScreen from '../screens/BookingScreen';
 
 const Stack = createStackNavigator();
 
@@ -74,6 +75,14 @@ const AppNavigator = () => {
           component={chatbot} 
           options={{ headerShown: false }} 
         />
+
+         <Stack.Screen 
+            name="Booking" 
+            component={BookingScreen} 
+            options={{ headerShown: false }} 
+          />
+
+
       </Stack.Navigator>
     </NavigationContainer>
   );
